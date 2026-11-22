@@ -1,0 +1,51 @@
+# TOCALL 登记申请（纯文本，可直接复制发送）
+#
+# 收件人：hessu@aprs.fi  （Hessu / OH7LZB，aprs.fi 作者）
+# 备用：aprs.fi 的 Google Group（https://groups.google.com/g/aprsfi），标题同样写法即可
+# 目的：把 APRGQ 加进 APRS 软件标识表，让 aprs.fi 的「设备 / Device」栏显示软件名，
+#       而不是 Unknown。登记通过后无需改代码，报文已经在用 APRGQ 了。
+#
+# 说明：aprs.fi 的「设备」字段只查 TOCALL，查不到就显示 Unknown；
+#       这张表由人维护，所以必须发信申请，代码层面改不出来。
+# ---------------------------------------------------------------------------
+
+Subject: New TOCALL registration request: APRGQ (Aurora Beacon)
+
+Hello Hessu,
+
+I would like to register a new TOCALL for an open-source Android APRS-IS
+client, so that aprs.fi shows a proper device name instead of
+"Unknown: Unknown".
+
+  TOCALL      : APRGQ
+  Software    : Aurora Beacon (极光信标)
+  Description : Android APRS-IS position beacon. Uploads standard
+                uncompressed position reports to APRS-IS over TCP
+                (no RF, no messaging, no weather), 188 APRS symbols,
+                user-editable comment.
+  Author      : BH6RGQ
+  Source code : https://github.com/Honest16888/aurora-beacon
+  License     : Apache-2.0
+  Platform    : Android 8.0+ (minSdk 26)
+  Example     : BH6RGQ-15>APRGQ,TCPIP*:!3050.78N/11419.05E>AURORA GPS 4G
+
+A few details that may be useful:
+
+  * Connects to *.aprs2.net:14580; login line is
+        user BH6RGQ-15 pass <passcode> vers AuroraBeacon 1.4.2
+  * Sends position reports only; no RF path (TCPIP*), no messages.
+  * The TOCALL is hardcoded to APRGQ in the packet builder.
+
+If APRGQ is already taken, or does not fit the naming convention,
+please let me know a free code and I will switch to it in the next
+release.
+
+73 de BH6RGQ
+
+# ---------------------------------------------------------------------------
+# 发出后的确认方式：
+#  1) 用 App 发一次报文（或等定时上报）
+#  2) 打开 https://aprs.fi/info/a/你的呼号-15 ，看 Device 一行是否变成 Aurora Beacon
+#  3) 也可以直接看报文：https://aprs.fi/info/a/你的呼号-15 里 Raw packet 的
+#     目的地址应为 APRGQ
+# 一般几天内处理；未处理前 Device 显示 Unknown 属正常，不影响上报与轨迹。
