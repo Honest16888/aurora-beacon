@@ -1,6 +1,22 @@
 # 截图目录
 
-把手机截图放到这里，README 会自动引用下面三个文件名：
+当前三张 PNG 是**按实际布局数值渲染的预览**（不是手机实拍）：
+
+- 源文件：`preview/main.html`、`preview/symbols.html`、`preview/about.html`
+- 生成器：`make_previews.py`（颜色/圆角/间距取自 `decoded/res/`，符号图标直接引用
+  `decoded/res/drawable-nodpi/sym_*.png`，标签取自 `arrays.xml`）
+- 渲染方式：起一个本地 HTTP 服务（`python -m http.server`），浏览器打开后整页截图并裁到 412dp 宽
+
+界面改动后重新生成：
+
+```powershell
+python make_previews.py
+# 起服务 → 浏览器打开 docs/images/preview/*.html → 整页截图 → 覆盖同名 PNG
+```
+
+想换成真机截图：直接用同名 PNG 覆盖即可，其余文件不用动。
+
+下面三个文件名是 README 引用的（`main.png` / `symbols.png` / `about.png`）：
 
 | 文件名 | 内容 | 建议 |
 |---|---|---|

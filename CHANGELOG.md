@@ -9,6 +9,22 @@
 
 ---
 
+## [1.4.2] - 2026-11-22
+
+### 修复
+
+- **aprs.fi 设备显示 `Unknown: Unknown`**：报文目的地址（TOCALL）原为泛用的 `APRS`，
+  aprs.fi 查不到对应软件，故显示 Unknown。现改为专属标识 **`APRGQ`**。
+  > 完整显示为「极光信标」需要把 TOCALL 登记到软件标识表（aprs.fi 侧的数据），
+  > 申请文本见 [docs/APRS.md](docs/APRS.md#8-设备名aprsfi-的设备字段)。
+
+### 文档
+
+- 补充界面截图（主界面 / 图标选择 / 版权页），由 `docs/images/preview/*.html` 按实际布局数值渲染
+- 新增 `make_previews.py`：从 `decoded/res` 读取颜色、间距与符号图标生成预览页，便于随版本更新截图
+
+---
+
 ## [1.4.1] - 2026-11-22
 
 ### 变更

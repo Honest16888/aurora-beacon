@@ -91,6 +91,15 @@ adb logcat -d -s AndroidRuntime:E
 - `-1` 表示当前没有连接 APRS-IS（只读观察用），不是密码
 - 密码范围是 `0–32767`，出现很小的数字是正常的
 
+### Q：aprs.fi 上「设备」显示 `Unknown: Unknown`？
+
+aprs.fi 这个字段**只认报文的 TOCALL（目的地址）**，拿它去查软件登记表，查不到就是 Unknown。
+
+- 1.4.2 起 TOCALL 由泛用的 `APRS` 改为专属的 **`APRGQ`**（报文里已经能看出是哪个软件）
+- 要让它显示「极光信标」，需要把 `APRGQ` 登记进软件标识表：申请文本已写在
+  [docs/APRS.md](APRS.md#8-设备名aprsfi-的设备字段)，发一封邮件即可
+- 登记通过前显示 Unknown 不影响上报与轨迹显示，只是"设备"这一栏没人认识
+
 ### Q：能改上报内容吗？
 
 可以，两处：

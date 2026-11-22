@@ -76,13 +76,13 @@
 
 ## 截图
 
-<!-- 把截图放进 docs/images/ 再替换下面路径 -->
-
 | 主界面 | 图标选择 | 版权页 |
 |:---:|:---:|:---:|
-| `docs/images/main.png` | `docs/images/symbols.png` | `docs/images/about.png` |
+| ![主界面](docs/images/main.png) | ![图标选择](docs/images/symbols.png) | ![版权页](docs/images/about.png) |
 
-> 截图待补：把手机截图放到 `docs/images/`，按下表命名即可自动显示；未放置时上面三格是占位文本。
+> 以上是按**实际布局数值**渲染的界面预览：`docs/images/preview/*.html`（颜色、圆角、间距全部取自
+> `decoded/res/`，符号图标直接引用 `decoded/res/drawable-nodpi/sym_*.png`），用浏览器截图得到。
+> 想换真机截图：把 PNG 覆盖到 `docs/images/` 同名文件即可，其余不用动。
 
 ## 快速开始
 

@@ -5,14 +5,14 @@
 ## 1. 一次上报的完整报文
 
 ```
-BH6RGQ-15>APRS,TCPIP*:!3050.78N/11419.05E>汽车 在二环
+BH6RGQ-15>APRGQ,TCPIP*:!3050.78N/11419.05E>汽车 在二环
 ```
 
 | 字段 | 值 | 说明 |
 |---|---|---|
 | 源地址 | `BH6RGQ-15` | 呼号 + SSID（`0–15`） |
-| 目的地址 | `APRS` | 通用 APRS 目的地址（网关按它识别） |
-| 路径 | `TCPIP*` | 已由 APRS-IS 服务器注入（`*` 表示已中继） |
+| 目的地址（TOCALL） | `APRGQ` | 软件标识，见 [§8](#8-设备名aprsfi-的设备字段)；必须是 `AP` 前缀 |
+| 路径 | `TCPIP*` | 已由 APRS-IS 服务器注入（`*` 表示已中继）；直连 APRS-IS 不要写 RF 路径 |
 | DTI | `!` | 位置报文，无时间戳（`/` 也可以是时间戳格式，本项目不用） |
 | 纬度 | `3050.78N` | `ddmm.mmN`：30°50.78′N |
 | 符号表 | `/` | `/`=主表，`\`=副表 |
@@ -149,3 +149,50 @@ filter m/200          # 以某点为中心 200km 范围
 | 点位乱跳 | 基站/网络定位精度差（精度 = 数百米～数公里），属正常 |
 | 点位过几小时消失 | aprs.fi 的显示时间窗（默认 3 小时）——用 `timerange` 参数调整 |
 | 被服务器踢 | 上报过快（< 30 秒）、重复包、路径写了 RF 路径 |
+
+## 8. 设备名（aprs.fi 的「设备」字段）
+
+aprs.fi 站点页上的 **Device / 设备** 一行，**只取决于报文的 TOCALL（目的地址）**，
+它拿 TOCALL 去查一张软件登记表，查不到就显示 `Unknown: Unknown`。
+
+所以：
+
+| 报文目的地址 | aprs.fi 显示 |
+|---|---|
+| `APRS`（泛用，旧版用的就是这个） | `Unknown: Unknown` |
+| `APRGQ`（本版，未登记） | 仍可能显示 Unknown，但报文里已带专属标识 |
+| `APRGQ`（**已登记**后） | `极光信标 (APRGQ)` 或登记表里的名称 |
+
+改代码无法凭空让 aprs.fi 认识一个新软件——需要把 TOCALL **登记到软件标识表**里
+（aprs.fi 会同步这张表）。本项目的申请文本已经写好，直接发出去即可：
+
+> **收件人**：Hessu（aprs.fi 作者，OH7LZB）— `hessu@aprs.fi`，
+> 或发到 aprs.fi 的 Google Group。
+>
+> **主题**：New TOCALL registration request: APRGQ
+>
+> **正文**：
+>
+> ```
+> Hello,
+>
+> I would like to register a new TOCALL for an open-source Android APRS-IS
+> client, so that aprs.fi shows a proper device name instead of "Unknown".
+>
+>   TOCALL      : APRGQ
+>   Software    : Aurora Beacon (极光信标)
+>   Description : Android APRS-IS position beacon; uploads position reports
+>                 to APRS-IS over TCP (no RF), 188 APRS symbols, glass UI.
+>   Author      : BH6RGQ
+>   Source code : https://github.com/Honest16888/aurora-beacon
+>   License     : Apache-2.0
+>   Example pkt : BH6RGQ-15>APRGQ,TCPIP*:!3050.78N/11419.05E>AURORA GPS 4G
+>
+> Please add it to the APRS device identification list.
+>
+> 73, BH6RGQ
+> ```
+
+登记通过前，别人看到的设备名仍是 Unknown —— 这属于 aprs.fi 侧的数据，不是报文错误；
+报文的其它部分（呼号、位置、符号、备注）都是正常的。
+

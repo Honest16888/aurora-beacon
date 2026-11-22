@@ -304,7 +304,7 @@
 
     move-result-object p1
 
-    const-string p4, ">APRS,TCPIP*:!"
+    const-string p4, ">APRGQ,TCPIP*:!"
 
     invoke-virtual {p1, p4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
