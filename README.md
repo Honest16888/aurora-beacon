@@ -2,7 +2,7 @@
 
 > 把手机变成一台 APRS-IS 定位信标：按设定间隔自动把位置打进 APRS-IS，别人在 [aprs.fi](https://aprs.fi) 上就能看到你。
 
-<!-- 把下面所有 YOURNAME 换成你的 GitHub 用户名，仓库名可按需改成 aurora-beacon -->
+<!-- 仓库：https://github.com/Honest16888/aurora-beacon -->
 
 ![platform](https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white)
 ![minSdk](https://img.shields.io/badge/minSdk-26-2dd4bf)
