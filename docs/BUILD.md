@@ -128,7 +128,19 @@ python make_icons.py
 | 点某功能闪退 | 新增代码未降级 | 按本项目约定给每一步加 try-catch，失败就隐藏该功能 |
 | `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | 签名或 versionCode 冲突 | 用同一密钥；递增 versionCode；必要时卸载重装 |
 
-## 8. 调试
+## 8. 发布检查清单
+
+发新版前逐项确认（漏掉会导致版本号 / 显示不一致）：
+
+1. `decoded/apktool.yml` → `versionCode` **递增**、`versionName` 改好
+2. `decoded/smali/com/yg/aprs/AprsClient.smali` → 登录行里的 `vers AuroraBeacon <版本>`
+   同步成新版本（这串不在 `apktool.yml` 里，最容易漏）
+3. `CHANGELOG.md` 加一节，写清问题根因
+4. 界面有改动 → `python make_previews.py` 重出 `docs/images/*.png`
+5. `./build.ps1` 构建，`apksigner verify --print-certs` 确认证书指纹没变
+6. 覆盖安装自测：启动 → 选图标 → 启动上报 → aprs.fi 能看到点 → 停止上报
+
+## 9. 调试
 
 - 崩溃栈：`/sdcard/Android/data/com.yg.aprs/files/crash.txt`（应用自带的 `CrashGuard` 写）
 - 实时日志：`adb logcat -s AndroidRuntime:E`

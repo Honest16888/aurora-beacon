@@ -168,7 +168,7 @@
 
     move-result-object p1
 
-    const-string p2, " vers AuroraBeacon 1.4.1\r\n"
+    const-string p2, " vers AuroraBeacon 1.4.2\r\n"
 
     invoke-virtual {p1, p2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
