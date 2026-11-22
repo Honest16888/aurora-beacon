@@ -133,8 +133,9 @@ python make_icons.py
 发新版前逐项确认（漏掉会导致版本号 / 显示不一致）：
 
 1. `decoded/apktool.yml` → `versionCode` **递增**、`versionName` 改好
-2. `decoded/smali/com/yg/aprs/AprsClient.smali` → 登录行里的 `vers AuroraBeacon <版本>`
-   同步成新版本（这串不在 `apktool.yml` 里，最容易漏）
+2. 登录行 `vers` 版本号有两处需要同步（都不在 `apktool.yml` 里，最容易漏）：
+   `java/src/com/yg/aprs/BeaconSend.java` 的 `VERS`（实际生效的那条），
+   以及 `decoded/smali/com/yg/aprs/AprsClient.smali` 里的旧串
 3. `CHANGELOG.md` 加一节，写清问题根因
 4. 界面有改动 → `python make_previews.py` 重出 `docs/images/*.png`
 5. `./build.ps1` 构建，`apksigner verify --print-certs` 确认证书指纹没变

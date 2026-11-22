@@ -703,6 +703,14 @@
 
     move-result-object v18
 
+    if-nez v18, :have_loc
+
+    invoke-static {v8}, Lcom/yg/aprs/LocationFallback;->fresh(Landroid/content/Context;)Landroid/location/Location;
+
+    move-result-object v18
+
+    :have_loc
+
     .line 139
     iget-object v0, v8, Lcom/yg/aprs/AprsService;->helper:Lcom/yg/aprs/LocationHelper;
 
@@ -814,7 +822,9 @@
     move-result-object v1
 
     .line 148
-    invoke-virtual {v9, v1}, Lcom/yg/aprs/AprsClient;->sendLine(Ljava/lang/String;)Z
+    invoke-static {v8, v11, v12, v10, v15}, Lcom/yg/aprs/BeaconSend;->configure(Landroid/content/Context;Ljava/lang/String;ILjava/lang/String;I)V
+
+    invoke-static {v1}, Lcom/yg/aprs/BeaconSend;->send(Ljava/lang/String;)Z
 
     move-result v2
 

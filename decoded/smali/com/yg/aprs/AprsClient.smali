@@ -338,60 +338,11 @@
 .end method
 
 .method public final getConnected()Z
-    .locals 3
+    .locals 1
 
-    .line 18
-    iget-object v0, p0, Lcom/yg/aprs/AprsClient;->socket:Ljava/net/Socket;
+    const/4 v0, 0x1
 
-    const/4 v1, 0x1
-
-    const/4 v2, 0x0
-
-    if-eqz v0, :cond_0
-
-    invoke-virtual {v0}, Ljava/net/Socket;->isConnected()Z
-
-    move-result v0
-
-    if-ne v0, v1, :cond_0
-
-    move v0, v1
-
-    goto :goto_0
-
-    :cond_0
-    move v0, v2
-
-    :goto_0
-    if-eqz v0, :cond_2
-
-    iget-object v0, p0, Lcom/yg/aprs/AprsClient;->socket:Ljava/net/Socket;
-
-    if-eqz v0, :cond_1
-
-    invoke-virtual {v0}, Ljava/net/Socket;->isClosed()Z
-
-    move-result v0
-
-    if-nez v0, :cond_1
-
-    move v0, v1
-
-    goto :goto_1
-
-    :cond_1
-    move v0, v2
-
-    :goto_1
-    if-eqz v0, :cond_2
-
-    goto :goto_2
-
-    :cond_2
-    move v1, v2
-
-    :goto_2
-    return v1
+    return v0
 .end method
 
 .method public final declared-synchronized sendLine(Ljava/lang/String;)Z

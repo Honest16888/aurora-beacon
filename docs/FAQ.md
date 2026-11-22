@@ -128,6 +128,35 @@ aprs.fi 这个字段**只认报文的 TOCALL（目的地址）**，拿它去查�
   - 通用：设置 → 电池 → 电池优化 → 找到本应用 → **不优化**
 - Android 13+ 还需要允许通知，否则前台服务通知不显示（服务仍可运行）
 
+### Q：切到后台就不上报了 / 一直显示上报失败？
+
+1.4.3 起已修，原因有三个，都在连接层：
+
+| 原因 | 现象 | 修法 |
+|---|---|---|
+| 复用长连接，后台网络切换后 socket 半死 | 界面显示"已上报"，aprs.fi 上没有点 | 每轮独立建连 + 失败重试 |
+| 旧连接握手失败会整轮跳过 | 一个周期白等 | 轮询不再走旧连接分支 |
+| 拿不到定位就整轮不发 | 状态停在「无定位」 | 补 10 分钟内的 lastKnownLocation |
+
+如果升级后仍然中断，先看网络日志（1.4.3+ 才有）：
+
+```
+/sdcard/Android/data/com.yg.aprs/files/net.log
+```
+
+典型内容与含义：
+
+```
+11-22 22:31:05  connected asia.aprs2.net:14580 try=1 banner=# aprsc 2.1.15 logresp=# logresp BH6RGQ-15 verified, server T2ASIA
+11-22 22:31:05  sent 52B: BH6RGQ-15>APRGQ,TCPIP*:!3050.78N/11419.05E>AURORA GPS 4G
+11-22 22:32:08  attempt 1 failed: java.net.SocketTimeoutException: failed to connect to /xxx (port 14580) after 12000ms
+```
+
+- `logresp ... verified` = 密码正确；若是 `unverified`，说明呼号/密码不对
+- `sent ...B` = 报文已写入 TCP；若连续出现 `failed`，多半是后台被限制联网，
+  去系统设置里给应用「不受限制 / 允许后台联网」
+- 日志为空说明服务没跑到发送阶段 → 检查是否被杀（见下面「锁屏一会儿就停止上报了」）
+
 ### Q：耗电吗？
 
 间隔 60 秒 + GPS 常开时，约每小时 3–6% 电量（视机型）。想省电：
