@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="server_labels">
+        <item>全球 rotate.aprs2.net</item>
+        <item>亚洲 asia.aprs2.net</item>
+        <item>欧洲 euro.aprs2.net</item>
+        <item>北美 noam.aprs2.net</item>
+        <item>大洋洲 oceania.aprs2.net</item>
+    </string-array>
+    <string-array name="symbol_labels">
+        <item>警察 /!</item>
+        <item>保留(原雨) /"</item>
+        <item>数字中继 /#</item>
+        <item>电话 /$</item>
+        <item>DX集群 /%</item>
+        <item>HF网关 /&amp;</item>
+        <item>小飞机 /\'</item>
+        <item>移动卫星站 /(</item>
+        <item>轮椅 /)</item>
+        <item>雪地摩托 /*</item>
+        <item>红十字 /+</item>
+        <item>童子军 /,</item>
+        <item>住宅 /-</item>
+        <item>叉号 /.</item>
+        <item>红点 //</item>
+        <item>圆圈(弃用) /0</item>
+        <item>数字1 /1</item>
+        <item>数字2 /2</item>
+        <item>数字3 /3</item>
+        <item>数字4 /4</item>
+        <item>数字5 /5</item>
+        <item>数字6 /6</item>
+        <item>数字7 /7</item>
+        <item>数字8 /8</item>
+        <item>数字9 /9</item>
+        <item>消防 /:</item>
+        <item>露营地 /;</item>
+        <item>摩托车 /&lt;</item>
+        <item>火车头 /=</item>
+        <item>汽车 /&gt;</item>
+        <item>文件服务器 /?</item>
+        <item>预测点 /@</item>
+        <item>救助站 /A</item>
+        <item>BBS /B</item>
+        <item>独木舟 /C</item>
+        <item>未定义 /D</item>
+        <item>活动 /E</item>
+        <item>农用车 /F</item>
+        <item>网格坐标 /G</item>
+        <item>酒店 /H</item>
+        <item>网络电台 /I</item>
+        <item>未定义 /J</item>
+        <item>学校 /K</item>
+        <item>电脑用户 /L</item>
+        <item>MacAPRS /M</item>
+        <item>NTS电台 /N</item>
+        <item>气球 /O</item>
+        <item>警察 /P</item>
+        <item>未定义 /Q</item>
+        <item>房车 /R</item>
+        <item>航天飞机 /S</item>
+        <item>SSTV /T</item>
+        <item>公交车 /U</item>
+        <item>全地形车 /V</item>
+        <item>气象站 /W</item>
+        <item>直升机 /X</item>
+        <item>帆船 /Y</item>
+        <item>WinAPRS /Z</item>
+        <item>人 /[</item>
+        <item>定向三角 /\\</item>
+        <item>邮局 /]</item>
+        <item>大飞机 /^</item>
+        <item>气象站(蓝) /_</item>
+        <item>卫星天线 /`</item>
+        <item>救护车 /a</item>
+        <item>自行车 /b</item>
+        <item>指挥部 /c</item>
+        <item>消防队 /d</item>
+        <item>马 /e</item>
+        <item>消防车 /f</item>
+        <item>滑翔机 /g</item>
+        <item>医院 /h</item>
+        <item>岛屿通联 /i</item>
+        <item>吉普车 /j</item>
+        <item>卡车 /k</item>
+        <item>笔记本 /l</item>
+        <item>Mic-E中继 /m</item>
+        <item>节点 /n</item>
+        <item>应急中心 /o</item>
+        <item>漫游者 /p</item>
+        <item>网格点 /q</item>
+        <item>中继台 /r</item>
+        <item>船 /s</item>
+        <item>卡车停靠 /t</item>
+        <item>半挂车 /u</item>
+        <item>面包车 /v</item>
+        <item>供水站 /w</item>
+        <item>xAPRS /x</item>
+        <item>八木天线 /y</item>
+        <item>未定义 /z</item>
+        <item>未定义 /{</item>
+        <item>TNC流开关 /|</item>
+        <item>未定义 /}</item>
+        <item>TNC流开关 /~</item>
+        <item>紧急 \\!</item>
+        <item>保留 \\"</item>
+        <item>叠加中继 \\#</item>
+        <item>银行ATM \\$</item>
+        <item>电厂 \\%</item>
+        <item>IGate网关 \\&amp;</item>
+        <item>事故现场 \\\'</item>
+        <item>多云 \\(</item>
+        <item>地球观测 \\)</item>
+        <item>可用 \\*</item>
+        <item>教堂 \\+</item>
+        <item>女童子军 \\,</item>
+        <item>住宅 \\-</item>
+        <item>可疑点 \\.</item>
+        <item>路点 \\/</item>
+        <item>中继圆圈 \\0</item>
+        <item>可用 \\1</item>
+        <item>可用 \\2</item>
+        <item>可用 \\3</item>
+        <item>可用 \\4</item>
+        <item>可用 \\5</item>
+        <item>可用 \\6</item>
+        <item>可用 \\7</item>
+        <item>网络节点 \\8</item>
+        <item>加油站 \\9</item>
+        <item>可用 \\:</item>
+        <item>公园野餐 \\;</item>
+        <item>预警 \\&lt;</item>
+        <item>可用组 \\=</item>
+        <item>车辆 \\&gt;</item>
+        <item>信息亭 \\?</item>
+        <item>飓风 \\@</item>
+        <item>DTMF盒子 \\A</item>
+        <item>可用 \\B</item>
+        <item>海岸警卫 \\C</item>
+        <item>仓库 \\D</item>
+        <item>烟雾 \\E</item>
+        <item>可用 \\F</item>
+        <item>可用 \\G</item>
+        <item>雾霾危害 \\H</item>
+        <item>阵雨 \\I</item>
+        <item>可用 \\J</item>
+        <item>对讲机 \\K</item>
+        <item>灯塔 \\L</item>
+        <item>MARS电台 \\M</item>
+        <item>导航浮标 \\N</item>
+        <item>火箭 \\O</item>
+        <item>停车场 \\P</item>
+        <item>地震 \\Q</item>
+        <item>餐厅 \\R</item>
+        <item>卫星 \\S</item>
+        <item>雷暴 \\T</item>
+        <item>晴天 \\U</item>
+        <item>导航台 \\V</item>
+        <item>气象网站 \\W</item>
+        <item>药店 \\X</item>
+        <item>无线电 \\Y</item>
+        <item>可用 \\Z</item>
+        <item>云/人 \\[</item>
+        <item>GPS定位 \\\\</item>
+        <item>可用 \\]</item>
+        <item>飞机 \\^</item>
+        <item>气象站(绿) \\_</item>
+        <item>雨 \\`</item>
+        <item>应急通信 \\a</item>
+        <item>可用 \\b</item>
+        <item>民防 \\c</item>
+        <item>DX点 \\d</item>
+        <item>雨夹雪 \\e</item>
+        <item>漏斗云 \\f</item>
+        <item>大风旗 \\g</item>
+        <item>商店集市 \\h</item>
+        <item>兴趣点 \\i</item>
+        <item>工地 \\j</item>
+        <item>越野车 \\k</item>
+        <item>区域 \\l</item>
+        <item>数值牌 \\m</item>
+        <item>叠加三角 \\n</item>
+        <item>小圆点 \\o</item>
+        <item>可用 \\p</item>
+        <item>可用 \\q</item>
+        <item>厕所 \\r</item>
+        <item>船只 \\s</item>
+        <item>龙卷风 \\t</item>
+        <item>卡车 \\u</item>
+        <item>面包车 \\v</item>
+        <item>洪水 \\w</item>
+        <item>障碍物 \\x</item>
+        <item>雷暴警报 \\y</item>
+        <item>庇护所 \\z</item>
+        <item>可用(雾) \\{</item>
+        <item>TNC流开关 \\|</item>
+        <item>可用 \\}</item>
+        <item>TNC流开关 \\~</item>
+    </string-array>
+    <array name="symbol_icons">
+        <item>@drawable/sym_2f21</item>
+        <item>@drawable/sym_2f22</item>
+        <item>@drawable/sym_2f23</item>
+        <item>@drawable/sym_2f24</item>
+        <item>@drawable/sym_2f25</item>
+        <item>@drawable/sym_2f26</item>
+        <item>@drawable/sym_2f27</item>
+        <item>@drawable/sym_2f28</item>
+        <item>@drawable/sym_2f29</item>
+        <item>@drawable/sym_2f2a</item>
+        <item>@drawable/sym_2f2b</item>
+        <item>@drawable/sym_2f2c</item>
+        <item>@drawable/sym_2f2d</item>
+        <item>@drawable/sym_2f2e</item>
+        <item>@drawable/sym_2f2f</item>
+        <item>@drawable/sym_2f30</item>
+        <item>@drawable/sym_2f31</item>
+        <item>@drawable/sym_2f32</item>
+        <item>@drawable/sym_2f33</item>
+        <item>@drawable/sym_2f34</item>
+        <item>@drawable/sym_2f35</item>
+        <item>@drawable/sym_2f36</item>
+        <item>@drawable/sym_2f37</item>
+        <item>@drawable/sym_2f38</item>
+        <item>@drawable/sym_2f39</item>
+        <item>@drawable/sym_2f3a</item>
+        <item>@drawable/sym_2f3b</item>
+        <item>@drawable/sym_2f3c</item>
+        <item>@drawable/sym_2f3d</item>
+        <item>@drawable/sym_2f3e</item>
+        <item>@drawable/sym_2f3f</item>
+        <item>@drawable/sym_2f40</item>
+        <item>@drawable/sym_2f41</item>
+        <item>@drawable/sym_2f42</item>
+        <item>@drawable/sym_2f43</item>
+        <item>@drawable/sym_2f44</item>
+        <item>@drawable/sym_2f45</item>
+        <item>@drawable/sym_2f46</item>
+        <item>@drawable/sym_2f47</item>
+        <item>@drawable/sym_2f48</item>
+        <item>@drawable/sym_2f49</item>
+        <item>@drawable/sym_2f4a</item>
+        <item>@drawable/sym_2f4b</item>
+        <item>@drawable/sym_2f4c</item>
+        <item>@drawable/sym_2f4d</item>
+        <item>@drawable/sym_2f4e</item>
+        <item>@drawable/sym_2f4f</item>
+        <item>@drawable/sym_2f50</item>
+        <item>@drawable/sym_2f51</item>
+        <item>@drawable/sym_2f52</item>
+        <item>@drawable/sym_2f53</item>
+        <item>@drawable/sym_2f54</item>
+        <item>@drawable/sym_2f55</item>
+        <item>@drawable/sym_2f56</item>
+        <item>@drawable/sym_2f57</item>
+        <item>@drawable/sym_2f58</item>
+        <item>@drawable/sym_2f59</item>
+        <item>@drawable/sym_2f5a</item>
+        <item>@drawable/sym_2f5b</item>
+        <item>@drawable/sym_2f5c</item>
+        <item>@drawable/sym_2f5d</item>
+        <item>@drawable/sym_2f5e</item>
+        <item>@drawable/sym_2f5f</item>
+        <item>@drawable/sym_2f60</item>
+        <item>@drawable/sym_2f61</item>
+        <item>@drawable/sym_2f62</item>
+        <item>@drawable/sym_2f63</item>
+        <item>@drawable/sym_2f64</item>
+        <item>@drawable/sym_2f65</item>
+        <item>@drawable/sym_2f66</item>
+        <item>@drawable/sym_2f67</item>
+        <item>@drawable/sym_2f68</item>
+        <item>@drawable/sym_2f69</item>
+        <item>@drawable/sym_2f6a</item>
+        <item>@drawable/sym_2f6b</item>
+        <item>@drawable/sym_2f6c</item>
+        <item>@drawable/sym_2f6d</item>
+        <item>@drawable/sym_2f6e</item>
+        <item>@drawable/sym_2f6f</item>
+        <item>@drawable/sym_2f70</item>
+        <item>@drawable/sym_2f71</item>
+        <item>@drawable/sym_2f72</item>
+        <item>@drawable/sym_2f73</item>
+        <item>@drawable/sym_2f74</item>
+        <item>@drawable/sym_2f75</item>
+        <item>@drawable/sym_2f76</item>
+        <item>@drawable/sym_2f77</item>
+        <item>@drawable/sym_2f78</item>
+        <item>@drawable/sym_2f79</item>
+        <item>@drawable/sym_2f7a</item>
+        <item>@drawable/sym_2f7b</item>
+        <item>@drawable/sym_2f7c</item>
+        <item>@drawable/sym_2f7d</item>
+        <item>@drawable/sym_2f7e</item>
+        <item>@drawable/sym_5c21</item>
+        <item>@drawable/sym_5c22</item>
+        <item>@drawable/sym_5c23</item>
+        <item>@drawable/sym_5c24</item>
+        <item>@drawable/sym_5c25</item>
+        <item>@drawable/sym_5c26</item>
+        <item>@drawable/sym_5c27</item>
+        <item>@drawable/sym_5c28</item>
+        <item>@drawable/sym_5c29</item>
+        <item>@drawable/sym_5c2a</item>
+        <item>@drawable/sym_5c2b</item>
+        <item>@drawable/sym_5c2c</item>
+        <item>@drawable/sym_5c2d</item>
+        <item>@drawable/sym_5c2e</item>
+        <item>@drawable/sym_5c2f</item>
+        <item>@drawable/sym_5c30</item>
+        <item>@drawable/sym_5c31</item>
+        <item>@drawable/sym_5c32</item>
+        <item>@drawable/sym_5c33</item>
+        <item>@drawable/sym_5c34</item>
+        <item>@drawable/sym_5c35</item>
+        <item>@drawable/sym_5c36</item>
+        <item>@drawable/sym_5c37</item>
+        <item>@drawable/sym_5c38</item>
+        <item>@drawable/sym_5c39</item>
+        <item>@drawable/sym_5c3a</item>
+        <item>@drawable/sym_5c3b</item>
+        <item>@drawable/sym_5c3c</item>
+        <item>@drawable/sym_5c3d</item>
+        <item>@drawable/sym_5c3e</item>
+        <item>@drawable/sym_5c3f</item>
+        <item>@drawable/sym_5c40</item>
+        <item>@drawable/sym_5c41</item>
+        <item>@drawable/sym_5c42</item>
+        <item>@drawable/sym_5c43</item>
+        <item>@drawable/sym_5c44</item>
+        <item>@drawable/sym_5c45</item>
+        <item>@drawable/sym_5c46</item>
+        <item>@drawable/sym_5c47</item>
+        <item>@drawable/sym_5c48</item>
+        <item>@drawable/sym_5c49</item>
+        <item>@drawable/sym_5c4a</item>
+        <item>@drawable/sym_5c4b</item>
+        <item>@drawable/sym_5c4c</item>
+        <item>@drawable/sym_5c4d</item>
+        <item>@drawable/sym_5c4e</item>
+        <item>@drawable/sym_5c4f</item>
+        <item>@drawable/sym_5c50</item>
+        <item>@drawable/sym_5c51</item>
+        <item>@drawable/sym_5c52</item>
+        <item>@drawable/sym_5c53</item>
+        <item>@drawable/sym_5c54</item>
+        <item>@drawable/sym_5c55</item>
+        <item>@drawable/sym_5c56</item>
+        <item>@drawable/sym_5c57</item>
+        <item>@drawable/sym_5c58</item>
+        <item>@drawable/sym_5c59</item>
+        <item>@drawable/sym_5c5a</item>
+        <item>@drawable/sym_5c5b</item>
+        <item>@drawable/sym_5c5c</item>
+        <item>@drawable/sym_5c5d</item>
+        <item>@drawable/sym_5c5e</item>
+        <item>@drawable/sym_5c5f</item>
+        <item>@drawable/sym_5c60</item>
+        <item>@drawable/sym_5c61</item>
+        <item>@drawable/sym_5c62</item>
+        <item>@drawable/sym_5c63</item>
+        <item>@drawable/sym_5c64</item>
+        <item>@drawable/sym_5c65</item>
+        <item>@drawable/sym_5c66</item>
+        <item>@drawable/sym_5c67</item>
+        <item>@drawable/sym_5c68</item>
+        <item>@drawable/sym_5c69</item>
+        <item>@drawable/sym_5c6a</item>
+        <item>@drawable/sym_5c6b</item>
+        <item>@drawable/sym_5c6c</item>
+        <item>@drawable/sym_5c6d</item>
+        <item>@drawable/sym_5c6e</item>
+        <item>@drawable/sym_5c6f</item>
+        <item>@drawable/sym_5c70</item>
+        <item>@drawable/sym_5c71</item>
+        <item>@drawable/sym_5c72</item>
+        <item>@drawable/sym_5c73</item>
+        <item>@drawable/sym_5c74</item>
+        <item>@drawable/sym_5c75</item>
+        <item>@drawable/sym_5c76</item>
+        <item>@drawable/sym_5c77</item>
+        <item>@drawable/sym_5c78</item>
+        <item>@drawable/sym_5c79</item>
+        <item>@drawable/sym_5c7a</item>
+        <item>@drawable/sym_5c7b</item>
+        <item>@drawable/sym_5c7c</item>
+        <item>@drawable/sym_5c7d</item>
+        <item>@drawable/sym_5c7e</item>
+    </array>
+</resources>

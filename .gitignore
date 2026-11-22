@@ -1,0 +1,107 @@
+# ============================================================
+# 构建产物 / 二进制
+# ============================================================
+*.apk
+*.apks
+*.aab
+*.idsig
+*.dex
+*.jar
+/unsigned.apk
+/unsigned2.apk
+/aligned.apk
+/build-*.apk
+/build2-*.apk
+/build3-*.apk
+/dist/
+
+# ============================================================
+# 签名材料：绝对不要提交
+# ============================================================
+*.keystore
+*.jks
+*.p12
+keystore.properties
+signing.properties
+
+# ============================================================
+# 本地口令 / 密钥 / token
+# ============================================================
+.env
+.env.*
+*.secret
+*.token
+
+# ============================================================
+# 构建中间目录
+# ============================================================
+/decoded/build/
+/javaout/
+/d8out/
+
+# ============================================================
+# 基线 APK 与反编译产物（依赖库部分不入库）
+# 只保留本应用自己的 smali：com/yg/aprs
+# ============================================================
+/app.apk
+/apktool.jar
+/decoded/original/
+/decoded/unknown/
+/decoded/smali/*
+!/decoded/smali/com/
+/decoded/smali/com/*
+!/decoded/smali/com/yg/
+/decoded/smali/com/yg/*
+!/decoded/smali/com/yg/aprs/
+
+# ============================================================
+# 图标源素材与中间文件
+# ============================================================
+/symex/
+/aprs-symbols.zip
+/check_*.png
+/resdump.txt
+/res_strings.txt
+/stn_classes.txt
+/interesting_strings.txt
+/manifest.xml
+/manifest_decoded.xml
+
+# ============================================================
+# 一次性改造脚本（历史过程，结论见 CHANGELOG）
+# ============================================================
+/patch_*.py
+/rename_*.py
+/align_strings.py
+/ui_glass.py
+/transform.py
+/fix_arrays.py
+/analyze.py
+/resdump.py
+/check_order.py
+/check_xref.py
+/phase2b.py
+/personalize*.py
+/SymbolAdapter.java
+/SymbolAdapter.smali.bak
+
+# ============================================================
+# 编辑器 / 系统
+# ============================================================
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================================
+# 日志
+# ============================================================
+*.log
+crash.txt
+
+# 临时解包目录（apk 手工分析用）
+/extracted/
+__pycache__/
+*.pyc

@@ -1,0 +1,47 @@
+极光信标 · Aurora Beacon
+Copyright 2026 BH6RGQ
+
+本产品包含第三方开源组件，其归属与许可如下。分发本软件（含衍生版本）时请保留本文件。
+
+================================================================
+1. APRS 符号图形（188 个 APP 图标）
+================================================================
+来源      aprs.fi high-resolution symbol set
+作者      Heikki Hannikainen, OH7LZB
+项目      https://github.com/hessu/aprs-symbols
+许可      Creative Commons Attribution 4.0 International (CC BY 4.0)
+          https://creativecommons.org/licenses/by/4.0/
+说明      原始为矢量（AI/PDF）与多分辨率 PNG 精灵表；本工程按 ASCII
+          0x21–0x7E 逐格切分（主表 + 副表），重采样为 64×64 PNG，
+          存放于 res/drawable-nodpi/sym_<表><码>.png。
+          图形本身未作美术修改，仅做尺寸重采样。
+
+================================================================
+2. Material Components for Android
+================================================================
+版权      Copyright 2015-2024 The Android Open Source Project
+许可      Apache License 2.0
+
+================================================================
+3. AndroidX（AppCompat / Core / CoordinatorLayout / Fragment 等）
+================================================================
+版权      Copyright 2015-2024 The Android Open Source Project
+许可      Apache License 2.0
+
+================================================================
+4. Kotlin 标准库 / kotlinx.coroutines
+================================================================
+版权      Copyright 2010-2024 JetBrains s.r.o. and Kotlin Programming
+          Language contributors
+许可      Apache License 2.0
+
+================================================================
+5. APRS-IS 网络
+================================================================
+APRS-IS 由全球业余无线电爱好者与志愿者共同维护，无隶属关系。
+使用请遵守其速率与路径限制：
+  http://www.aprs-is.net/
+
+================================================================
+Apache License 2.0 全文见本仓库 LICENSE 文件。
+================================================================

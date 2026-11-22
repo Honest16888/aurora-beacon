@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="6.0dp" android:paddingBottom="6.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:id="@+id/symIcon" android:layout_width="30.0dp" android:layout_height="30.0dp" android:scaleType="fitCenter" android:contentDescription="@null" />
+    <TextView android:textSize="14.0sp" android:textColor="@color/textMain" android:ellipsize="end" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:singleLine="true" android:paddingStart="10.0dp" android:paddingEnd="6.0dp" />
+</LinearLayout>
