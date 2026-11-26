@@ -24,17 +24,25 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * 附近台站：用 APRS-IS 的**范围过滤**（`filter r/lat/lon/km`）订阅周边报文，
- * 读 8 秒，解析位置包，按距离排序后列出来。
+ * 用 APRS-IS 的过滤能力捞周边 / 全国的台站。
  *
- * 不需要任何 API key —— 走的就是我们自己那条协议。
- * 结果只保留每个呼号最新的一次位置。
+ * - 附近：`filter r/纬度/经度/60`（半径 60 公里）
+ * - 全国：`filter b/17.5/73.0/54.5/135.5`（中国范围的外接矩形）
+ *
+ * 不需要任何 API key —— 走的就是我们自己那条协议；每次用独立的短连接，
+ * 读完指定窗口就断开，不影响位置上报。
  */
 public final class NearbyQuery {
 
     private static final int RADIUS_KM = 60;
     private static final long WINDOW_MS = 8000L;
     private static final int MAX_SHOW = 30;
+
+    /** 全国范围（大致外接矩形）：纬度 17.5–54.5，经度 73.0–135.5 */
+    private static final double CN_LAT1 = 17.5;
+    private static final double CN_LON1 = 73.0;
+    private static final double CN_LAT2 = 54.5;
+    private static final double CN_LON2 = 135.5;
 
     private NearbyQuery() {
     }
@@ -57,7 +65,7 @@ public final class NearbyQuery {
         }
     }
 
-    /** 入口：弹列表（后台线程查询）。 */
+    /** 入口：周边台站列表。 */
     public static void run(final Activity act) {
         if (act == null) {
             return;
@@ -72,7 +80,7 @@ public final class NearbyQuery {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                final List<Station> list = query(act, lat, lon);
+                final List<Station> list = queryRadius(act, lat, lon);
                 act.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -85,7 +93,27 @@ public final class NearbyQuery {
         t.start();
     }
 
-    private static List<Station> query(Context ctx, double lat, double lon) {
+    /** 周边（60 公里）。 */
+    public static List<Station> queryRadius(Context ctx, double lat, double lon) {
+        String filter = String.format(Locale.US, "r/%f/%f/%d", lat, lon, RADIUS_KM);
+        return queryWithFilter(ctx, filter, lat, lon, WINDOW_MS);
+    }
+
+    /** 全国：拿中国范围矩形内的台站，用于在地图上一次性标出来。 */
+    public static List<Station> queryChina(Context ctx) {
+        String filter = String.format(Locale.US, "b/%f/%f/%f/%f",
+                CN_LAT1, CN_LON1, CN_LAT2, CN_LON2);
+        // 以国家中心为参考点算距离（仅用于排序/显示）
+        return queryWithFilter(ctx, filter, (CN_LAT1 + CN_LAT2) / 2.0, (CN_LON1 + CN_LON2) / 2.0, 12000L);
+    }
+
+    /**
+     * 通用查询：连一次、登录、发 filter、读到窗口结束、断开。
+     *
+     * @param filterLine 例如 `r/30.5/114.2/60` 或 `b/17.5/73.0/54.5/135.5`
+     */
+    public static List<Station> queryWithFilter(Context ctx, String filterLine,
+                                                double refLat, double refLon, long windowMs) {
         final Map<String, Station> found = new HashMap<String, Station>();
         Socket socket = null;
         try {
@@ -111,12 +139,12 @@ public final class NearbyQuery {
                     new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
             BufferedReader r = new BufferedReader(
                     new InputStreamReader(socket.getInputStream(), "UTF-8"));
-            w.write("user " + full + " pass " + pass + " vers AuroraBeacon 1.6.1\r\n");
-            w.write(String.format(Locale.US, "filter r/%f/%f/%d\r\n", lat, lon, RADIUS_KM));
+            w.write("user " + full + " pass " + pass + " vers AuroraBeacon 1.7.1\r\n");
+            w.write("filter " + filterLine + "\r\n");
             w.flush();
-            NetLog.note("nearby: query r/" + lat + "/" + lon + "/" + RADIUS_KM);
+            NetLog.note("query filter " + filterLine + " window=" + windowMs);
 
-            long deadline = System.currentTimeMillis() + WINDOW_MS;
+            long deadline = System.currentTimeMillis() + windowMs;
             while (System.currentTimeMillis() < deadline) {
                 String line;
                 try {
@@ -127,7 +155,7 @@ public final class NearbyQuery {
                 if (line == null) {
                     break;
                 }
-                Station st = parse(line, lat, lon);
+                Station st = parse(line, refLat, refLon);
                 if (st == null) {
                     continue;
                 }
@@ -140,7 +168,7 @@ public final class NearbyQuery {
                 }
             }
         } catch (Throwable t) {
-            NetLog.note("nearby failed: " + t);
+            NetLog.note("query failed: " + t);
         } finally {
             try {
                 if (socket != null) {
@@ -156,7 +184,7 @@ public final class NearbyQuery {
                 return Double.compare(a.km, b.km);
             }
         });
-        NetLog.note("nearby: found " + list.size());
+        NetLog.note("query found " + list.size());
         return list;
     }
 
@@ -194,11 +222,11 @@ public final class NearbyQuery {
             if (lat == 0 && lon == 0) {
                 return null;
             }
-            String comment = line.length() > p + 19 ? line.substring(p + 19).trim() : "";
-            double km = haversine(myLat, myLon, lat, lon);
-            if (km > RADIUS_KM * 1.6) {
+            if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
                 return null;
             }
+            String comment = line.length() > p + 19 ? line.substring(p + 19).trim() : "";
+            double km = haversine(myLat, myLon, lat, lon);
             return new Station(call, lat, lon, km, comment);
         } catch (Throwable t) {
             return null;
@@ -234,7 +262,7 @@ public final class NearbyQuery {
         }
     }
 
-    private static double haversine(double lat1, double lon1, double lat2, double lon2) {
+    static double haversine(double lat1, double lon1, double lat2, double lon2) {
         double r = 6371.0;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);

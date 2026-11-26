@@ -16,8 +16,11 @@ import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.MarkerOptions;
+import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.model.LatLng;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -124,6 +127,12 @@ public class BaiduMapActivity extends Activity {
                 NearbyQuery.run(BaiduMapActivity.this);
             }
         }), lp(1f, dp(8)));
+        bar.addView(button("全国台站", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loadNationwide();
+            }
+        }), lp(1f, dp(8)));
         bar.addView(button("网页地图", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -142,8 +151,64 @@ public class BaiduMapActivity extends Activity {
         setContentView(root);
     }
 
-    private void recenter(double la, double lo) {
+    /** 全国台站：拉 APRS-IS 的中国范围矩形，批量打点到地图上。 */
+    private void loadNationwide() {
+        if (mapView == null) {
+            return;
+        }
+        Toast.makeText(this, "正在获取全国台站（约 12 秒）…", Toast.LENGTH_SHORT).show();
+        final BaiduMap map = mapView.getMap();
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final List<NearbyQuery.Station> list = NearbyQuery.queryChina(BaiduMapActivity.this);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        plotStations(map, list);
+                    }
+                });
+            }
+        }, "yg-china");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    /** 批量加 marker（WGS-84 → GCJ-02 → BD-09），并把视野拉到全国。 */
+    private void plotStations(BaiduMap map, List<NearbyQuery.Station> list) {
         try {
+            if (map == null) {
+                return;
+            }
+            if (list == null || list.isEmpty()) {
+                Toast.makeText(this, "12 秒内没有收到国内台站的位置包", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            ArrayList<OverlayOptions> opts = new ArrayList<OverlayOptions>();
+            int n = Math.min(list.size(), 300);
+            for (int i = 0; i < n; i++) {
+                NearbyQuery.Station st = list.get(i);
+                double[] gcj = BeaconUi.wgs2gcj(st.lat, st.lon);
+                double[] bd = gcj2bd(gcj[0], gcj[1]);
+                opts.add(new MarkerOptions()
+                        .position(new LatLng(bd[0], bd[1]))
+                        .title(st.call));
+            }
+            map.addOverlays(opts);
+            double[] centerGcj = BeaconUi.wgs2gcj(35.0, 105.0);
+            double[] centerBd = gcj2bd(centerGcj[0], centerGcj[1]);
+            map.setMapStatus(MapStatusUpdateFactory.newLatLngZoom(
+                    new LatLng(centerBd[0], centerBd[1]), 4.5f));
+            Toast.makeText(this, "已标出 " + opts.size() + " 个台站（点标记看呼号）",
+                    Toast.LENGTH_LONG).show();
+            NetLog.note("plotted " + opts.size() + " stations from " + list.size());
+        } catch (Throwable t) {
+            NetLog.note("plot stations failed: " + t);
+            Toast.makeText(this, "标注台站失败：" + t, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void recenter(double la, double lo) {        try {
             double[] gcj = BeaconUi.wgs2gcj(la, lo);
             double[] bd = gcj2bd(gcj[0], gcj[1]);
             LatLng ll = new LatLng(bd[0], bd[1]);
