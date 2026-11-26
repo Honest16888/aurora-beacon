@@ -92,7 +92,13 @@ public final class BeaconUi {
         }
     }
 
-    /** 在地图上查看最近一次上报的位置。 */
+    /**
+     * 在地图上查看最近一次上报的位置。
+     *
+     * 顺序：百度地图 App → 高德地图 App → 系统地图选择器 → 高德网页(免 key) → OpenStreetMap。
+     * 坐标系处理：APRS 用的是 WGS-84；百度用 `coord_type=wgs84` 直接给原始值，
+     * 高德 App 的 scheme 只认 GCJ-02，所以先做一次 WGS→GCJ 纠偏（否则在国内会偏 300–600 米）。
+     */
     public static void openMap(Activity act) {
         if (act == null) {
             return;
@@ -103,22 +109,91 @@ public final class BeaconUi {
         }
         final double la = LastFix.lat();
         final double lo = LastFix.lon();
-        try {
-            String geo = String.format(Locale.US, "geo:%.6f,%.6f?q=%.6f,%.6f(YG%%)", la, lo, la, lo);
-            act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(geo)));
+        final String label = "极光信标";
+        final String coord = String.format(Locale.US, "%.6f,%.6f", la, lo);
+
+        // 1) 百度地图 App（原生支持 wgs84）
+        if (tryOpen(act, "baidumap://map/marker?location=" + coord
+                + "&title=" + Uri.encode(label)
+                + "&content=" + Uri.encode(coord)
+                + "&coord_type=wgs84&src=android.ygaprs")) {
             return;
-        } catch (ActivityNotFoundException e) {
-            // 没有地图 App，退到网页地图
-        } catch (Throwable ignored) {
         }
+        // 2) 高德地图 App（需要 GCJ-02）
+        double[] gcj = wgs2gcj(la, lo);
+        String gcjLat = String.format(Locale.US, "%.6f", gcj[0]);
+        String gcjLon = String.format(Locale.US, "%.6f", gcj[1]);
+        if (tryOpen(act, "androidamap://viewMap?sourceApplication=ygaprs&poiname="
+                + Uri.encode(label) + "&lat=" + gcjLat + "&lon=" + gcjLon + "&dev=0")) {
+            return;
+        }
+        // 3) 系统地图选择器（Google/华为/其他，按 WGS-84）
+        if (tryOpen(act, "geo:" + coord + "?q=" + coord + "(" + Uri.encode(label) + ")")) {
+            return;
+        }
+        // 4) 高德网页版（免 key，coordinate=wgs84）
+        if (tryOpen(act, "https://uri.amap.com/marker?position="
+                + String.format(Locale.US, "%.6f,%.6f", lo, la)
+                + "&name=" + Uri.encode(label) + "&coordinate=wgs84&callnative=0")) {
+            return;
+        }
+        // 5) OpenStreetMap
+        if (tryOpen(act, "https://www.openstreetmap.org/?mlat=" + la + "&mlon=" + lo
+                + "#map=16/" + la + "/" + lo)) {
+            return;
+        }
+        toast(act, "没有可用的地图应用");
+    }
+
+    private static boolean tryOpen(Activity act, String uri) {
         try {
-            String url = String.format(Locale.US,
-                    "https://www.openstreetmap.org/?mlat=%.6f&mlon=%.6f#map=16/%.6f/%.6f",
-                    la, lo, la, lo);
-            act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+            act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(uri)));
+            return true;
+        } catch (ActivityNotFoundException e) {
+            return false;
         } catch (Throwable t) {
-            toast(act, "没有可用的地图应用");
+            return false;
         }
+    }
+
+    /** WGS-84 → GCJ-02（高德/腾讯用）。国内范围外原样返回。 */
+    static double[] wgs2gcj(double lat, double lon) {
+        if (outOfChina(lat, lon)) {
+            return new double[]{lat, lon};
+        }
+        final double a = 6378245.0;
+        final double ee = 0.00669342162296594323;
+        double dLat = transformLat(lon - 105.0, lat - 35.0);
+        double dLon = transformLon(lon - 105.0, lat - 35.0);
+        double radLat = lat / 180.0 * Math.PI;
+        double magic = Math.sin(radLat);
+        magic = 1 - ee * magic * magic;
+        double sqrtMagic = Math.sqrt(magic);
+        dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+        dLon = (dLon * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
+        return new double[]{lat + dLat, lon + dLon};
+    }
+
+    private static boolean outOfChina(double lat, double lon) {
+        return lon < 72.004 || lon > 137.8347 || lat < 0.8293 || lat > 55.8271;
+    }
+
+    private static double transformLat(double x, double y) {
+        double ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y
+                + 0.2 * Math.sqrt(Math.abs(x));
+        ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
+        ret += (20.0 * Math.sin(y * Math.PI) + 40.0 * Math.sin(y / 3.0 * Math.PI)) * 2.0 / 3.0;
+        ret += (160.0 * Math.sin(y / 12.0 * Math.PI) + 320 * Math.sin(y * Math.PI / 30.0)) * 2.0 / 3.0;
+        return ret;
+    }
+
+    private static double transformLon(double x, double y) {
+        double ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y
+                + 0.1 * Math.sqrt(Math.abs(x));
+        ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
+        ret += (20.0 * Math.sin(x * Math.PI) + 40.0 * Math.sin(x / 3.0 * Math.PI)) * 2.0 / 3.0;
+        ret += (150.0 * Math.sin(x / 12.0 * Math.PI) + 300.0 * Math.sin(x / 30.0 * Math.PI)) * 2.0 / 3.0;
+        return ret;
     }
 
     /** 发送一条 APRS 消息：CALL-SSID>APRGQ,TCPIP*::ADDRESSEE:text{NN */
