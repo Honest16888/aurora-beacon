@@ -17,17 +17,18 @@ import android.webkit.WebViewClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * 地图页：本地 Leaflet（assets/map/map.html）+ OSM/CARTO 瓦片。
+ * 地图页：本地 Leaflet（assets/map/map.html）+ 高德/CARTO/OSM 瓦片。
  *
- * 与参考 app（APRSlocus / flutter_map）同思路：底图用 OSM 免 key 瓦片，
- * 台站是自己用 APRS-IS 过滤捞出来的，画在 Leaflet 图层上。
- * 不依赖任何地图 SDK，不依赖 AK，也不会因为原生库崩。
+ * 台站数据是**实时快照 + 持续累加**：12 秒窗口只能抓到"此刻在发"的台站
+ * （5 分钟一报的台站只有约 4% 概率落在窗口里），所以每轮把结果按呼号合并进
+ * cache，约 20 秒一轮地累加 —— 挂一两分钟即可覆盖当前所有活跃台站。
  *
- * 页面里的 JS 对象：window.YG = { setMe, addStations, clearStations, fitChina, zoomToMe }
+ * 页面里的 JS 对象：window.YG = { setMe, addStations, clearStations, fitChina, zoomToMe, nextBase }
  */
 public class MapActivity extends Activity {
 
@@ -36,8 +37,13 @@ public class MapActivity extends Activity {
     private double lat;
     private double lon;
     private boolean pageReady;
-    private boolean autoQueried;
+    private volatile boolean stopped;
+    private volatile boolean loopRunning;
+    private boolean fitted;
     private String pendingStations;   // 页面还没 ready 时先攒着
+    /** 累计台站：每轮查询按呼号合并（只在后台线程写，UI 线程拿快照）。 */
+    private final LinkedHashMap<String, NearbyQuery.Station> cache =
+            new LinkedHashMap<String, NearbyQuery.Station>();
 
     /** 入口：主界面「地图」按钮。 */
     public static void show(Activity from) {
@@ -73,7 +79,7 @@ public class MapActivity extends Activity {
         hint.setTextSize(11f);
         hint.setTextColor(0xFF93A4BC);
         hint.setPadding(dp(14), dp(8), dp(14), dp(6));
-        hint.setText(String.format(Locale.US, "最近上报 %.6f, %.6f · 正在获取周边台站…", lat, lon));
+        hint.setText(String.format(Locale.US, "最近上报 %.6f, %.6f · 正在获取台站…", lat, lon));
         root.addView(hint, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
@@ -101,10 +107,7 @@ public class MapActivity extends Activity {
                     pushStations(pendingStations);
                     pendingStations = null;
                 }
-                if (!autoQueried) {
-                    autoQueried = true;
-                    queryChinaAsync();
-                }
+                startNationLoop();
             }
         });
         root.addView(web, new LinearLayout.LayoutParams(
@@ -117,7 +120,12 @@ public class MapActivity extends Activity {
         bar.addView(button("全国台站", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                queryChinaAsync();
+                if (loopRunning) {
+                    Toast.makeText(MapActivity.this,
+                            "自动累加中，每 ~20 秒补一批", Toast.LENGTH_SHORT).show();
+                } else {
+                    startNationLoop();
+                }
             }
         }), lp(1f, 0));
         bar.addView(button("附近台站", new View.OnClickListener() {
@@ -191,37 +199,75 @@ public class MapActivity extends Activity {
         }
     }
 
-    /** 全国：APRS-IS 中国范围矩形 → Leaflet 标记。 */
-    private void queryChinaAsync() {
-        if (!BeaconUi.LastFix.has()) {
+    /**
+     * 全国台站**累加**循环。
+     *
+     * 12 秒窗口只是"此刻正在发"的台站的快照，所以每轮把结果按呼号合并进 cache，
+     * 约 20 秒一轮持续累加 —— 挂一两分钟就能覆盖当前所有活跃台站。
+     */
+    private void startNationLoop() {
+        if (loopRunning || stopped || !BeaconUi.LastFix.has()) {
             return;
         }
-        hint.setText("正在获取全国台站（约 12 秒）…");
+        loopRunning = true;
+        hint.setText("正在获取全国台站（约 12 秒/轮，持续累加）…");
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                final List<NearbyQuery.Station> list = NearbyQuery.queryChina(MapActivity.this);
-                final String json = toJson(list, 300);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (pageReady) {
-                            pushStations(json);
-                            eval("YG.fitChina()");
-                        } else {
-                            pendingStations = json;
+                while (!stopped) {
+                    List<NearbyQuery.Station> got = NearbyQuery.queryChina(MapActivity.this);
+                    String json;
+                    int total;
+                    synchronized (cache) {
+                        if (got != null) {
+                            for (int i = 0; i < got.size(); i++) {
+                                NearbyQuery.Station st = got.get(i);
+                                cache.put(st.call, st);   // 每轮刷新该台最新位置
+                            }
                         }
-                        hint.setText(String.format(Locale.US,
-                                "最近上报 %.6f, %.6f · 全国台站 %d 个", lat, lon, list.size()));
+                        json = toJson(new java.util.ArrayList<NearbyQuery.Station>(
+                                cache.values()), 400);
+                        total = cache.size();
                     }
-                });
+                    final String j = json;
+                    final int n = total;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (stopped) {
+                                return;
+                            }
+                            if (pageReady) {
+                                pushStations(j);
+                                if (!fitted) {
+                                    fitted = true;
+                                    eval("YG.fitChina()");
+                                }
+                            } else {
+                                pendingStations = j;
+                            }
+                            hint.setText(String.format(Locale.US,
+                                    "最近上报 %.6f, %.6f · 全国台站累计 %d（每 ~20 秒自动累加）",
+                                    lat, lon, n));
+                        }
+                    });
+                    for (int i = 0; i < 8 && !stopped; i++) {
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                }
+                loopRunning = false;
             }
-        }, "yg-china");
+        }, "yg-china-loop");
         t.setDaemon(true);
         t.start();
     }
 
-    /** 周边 60 公里：弹列表（详情对话框，不跳外部浏览器）。 */
+    /** 周边 60 公里：弹列表，结果同时并入全国累计。 */
     private void queryNearbyList() {
         if (!BeaconUi.LastFix.has()) {
             Toast.makeText(this, "还没有定位数据", Toast.LENGTH_SHORT).show();
@@ -233,12 +279,33 @@ public class MapActivity extends Activity {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                final List<NearbyQuery.Station> list = NearbyQuery.queryRadius(MapActivity.this, la, lo);
+                final List<NearbyQuery.Station> list =
+                        NearbyQuery.queryRadius(MapActivity.this, la, lo);
+                String json;
+                int total;
+                synchronized (cache) {
+                    if (list != null) {
+                        for (int i = 0; i < list.size(); i++) {
+                            cache.put(list.get(i).call, list.get(i));
+                        }
+                    }
+                    json = toJson(new java.util.ArrayList<NearbyQuery.Station>(
+                            cache.values()), 400);
+                    total = cache.size();
+                }
+                final String j = json;
+                final int n = total;
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         hint.setText(String.format(Locale.US,
-                                "最近上报 %.6f, %.6f · 周边台站 %d 个", la, lo, list.size()));
+                                "最近上报 %.6f, %.6f · 周边 %d / 全国累计 %d",
+                                la, lo, list == null ? 0 : list.size(), n));
+                        if (pageReady) {
+                            pushStations(j);
+                        } else {
+                            pendingStations = j;
+                        }
                         NearbyQuery.showDetailList(MapActivity.this, list);
                     }
                 });
@@ -318,6 +385,7 @@ public class MapActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        stopped = true;
         try {
             if (web != null) {
                 web.stopLoading();
