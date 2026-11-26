@@ -9,6 +9,28 @@
 
 ---
 
+## [1.6.0] - 2026-11-26
+
+### 新增
+
+- **内置地图页**（`MapActivity`，WebView 实现，**不依赖地图 SDK、不需要 AK**）
+  - 主界面「地图」→ 应用内直接看位置：高德网页版 URI（`uri.amap.com`，官方免 key，`coordinate=wgs84`）
+  - 页内三个按钮：**刷新**（重新加载）、**百度页**（`api.map.baidu.com/marker`，免 key）、
+    **地图App**（走 1.5.1 的外呼链：百度 App → 高德 App → 系统地图 → OSM）
+  - 没有定位数据时直接提示，不跳转；`onDestroy` 主动 `destroy()` WebView，避免泄漏
+
+- 清单预置百度 SDK 的 AK：`<meta-data name="com.baidu.lbsapi.API_KEY" value="…"/>`
+  （先把配置放好，等 `BaiduLBS_Android.jar` + `libBaiduMapSDK*.so` 到位即可接真 SDK）
+
+### 说明
+
+- 为什么还不上真 SDK：百度/高德的 Android SDK 需要原生 `.so`（每 ABI 十几 MB）、
+  绑定包名+签名的 AK、隐私合规初始化（`SDKInitializer.setAgreePrivacy` 等），
+  且 **SDK 压缩包在官网下载页后面，脚本抓不到**（返回的是 HTML 页面，不是 zip）。
+  体积会从 4.9MB 涨到 20MB+，必须真机验证是否白屏。
+
+---
+
 ## [1.5.2] - 2026-11-26
 
 ### 新增

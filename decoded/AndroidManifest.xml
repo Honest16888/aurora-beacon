@@ -14,6 +14,9 @@
     <uses-permission android:name="com.yg.aprs.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"/>
     <application android:allowBackup="true" android:appComponentFactory="androidx.core.app.CoreComponentFactory" android:extractNativeLibs="false" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/Theme.YGAPRS">
         <activity android:exported="false" android:label="版权与关于" android:name="com.yg.aprs.CopyrightActivity" />
+        <activity android:exported="false" android:label="地图" android:name="com.yg.aprs.MapActivity" />
+        <!-- 百度地图 SDK 的 AK（预置；等 BaiduLBS_Android.jar + libBaiduMapSDK*.so 到位后才生效） -->
+        <meta-data android:name="com.baidu.lbsapi.API_KEY" android:value="VEykYSexWUmvVHnRpUncoqUY2yfBv6va" />
         <activity android:exported="true" android:name="com.yg.aprs.MainActivity" android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

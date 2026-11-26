@@ -163,6 +163,17 @@ APRS-IS 拒收；现在启动和发消息前都会自动拆成 base + SSID 写�
 
 如果提示"还没有定位数据"，说明本次运行还没成功上报过，先点「启动上报」等一轮。
 
+### Q：内置地图是怎么实现的？要填 AK 吗？
+
+1.6.0 的内置地图是 **WebView + 免 key 的网页地图**：
+
+- 默认加载高德网页版 `uri.amap.com/marker?...&coordinate=wgs84`（官方免 key）
+- 页内「百度页」用 `api.map.baidu.com/marker?coord_type=wgs84`（同样免 key）
+- 页内「地图App」调用本机地图 App（百度 → 高德 → 系统 → OSM）
+
+所以**不需要填 AK**。清单里预置的 `com.baidu.lbsapi.API_KEY` 是给"将来接真 SDK"留的，
+现在不生效、也不影响任何功能。
+
 ### Q：为什么高德里的点比 aprs.fi 上偏了几百米？
 
 坐标系不同：
