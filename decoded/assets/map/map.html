@@ -15,70 +15,167 @@ html,body,#map{margin:0;padding:0;height:100%;width:100%;background:#0A1020;over
 .leaflet-bar a{background:#16233A;color:#93A4BC;border-color:#2A3B55}
 .leaflet-bar a:hover{background:#1E2E48;color:#E8EEF6}
 .attrib{position:absolute;bottom:2px;right:6px;font:10px/1.2 sans-serif;color:#54657E;z-index:1000;background:rgba(10,16,32,.6);padding:1px 5px;border-radius:4px}
+#baseBtn{position:absolute;top:8px;right:8px;z-index:1100;background:rgba(22,35,58,.92);color:#93A4BC;
+  border:1px solid #2A3B55;border-radius:8px;padding:6px 12px;font:12px/1.2 sans-serif}
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="attrib">© OpenStreetMap · CARTO</div>
+<button id="baseBtn">底图:高德</button>
+<div class="attrib" id="attrib">© 高德地图</div>
 <script src="leaflet.js"></script>
 <script>
-var map = L.map('map', {zoomControl: true, attributionControl: false, worldCopyJump: true})
-            .setView([35, 105], 5);
+// ---- 坐标系：APRS=WGS-84；高德瓦片=GCJ-02；OSM/CARTO=WGS-84 ----
+var PI = 3.14159265358979324;
+var A = 6378245.0;
+var EE = 0.00669342162296594323;
+function outOfChina(la, lo) { return lo < 72.004 || lo > 137.8347 || la < 0.8293 || la > 55.8271; }
+function tLat(x, y) {
+  var r = -100 + 2*x + 3*y + 0.2*y*y + 0.1*x*y + 0.2*Math.sqrt(Math.abs(x));
+  r += (20*Math.sin(6*x*PI) + 20*Math.sin(2*x*PI)) * 2/3;
+  r += (20*Math.sin(y*PI) + 40*Math.sin(y/3*PI)) * 2/3;
+  r += (160*Math.sin(y/12*PI) + 320*Math.sin(y*PI/30)) * 2/3;
+  return r;
+}
+function tLon(x, y) {
+  var r = 300 + x + 2*y + 0.1*x*x + 0.1*x*y + 0.1*Math.sqrt(Math.abs(x));
+  r += (20*Math.sin(6*x*PI) + 20*Math.sin(2*x*PI)) * 2/3;
+  r += (20*Math.sin(x*PI) + 40*Math.sin(x/3*PI)) * 2/3;
+  r += (150*Math.sin(x/12*PI) + 300*Math.sin(x/30*PI)) * 2/3;
+  return r;
+}
+function wgs2gcj(la, lo) {
+  if (outOfChina(la, lo)) return [la, lo];
+  var dLat = tLat(lo - 105, la - 35);
+  var dLon = tLon(lo - 105, la - 35);
+  var radLat = la / 180 * PI;
+  var magic = Math.sin(radLat);
+  magic = 1 - EE * magic * magic;
+  var sqrtMagic = Math.sqrt(magic);
+  dLat = (dLat * 180) / ((A * (1 - EE)) / (magic * sqrtMagic) * PI);
+  dLon = (dLon * 180) / (A / sqrtMagic * Math.cos(radLat) * PI);
+  return [la + dLat, lo + dLon];
+}
+function gcj2wgs(la, lo) {   // 迭代反解，误差 < 0.00001°
+  if (outOfChina(la, lo)) return [la, lo];
+  var wLa = la, wLo = lo;
+  for (var i = 0; i < 3; i++) {
+    var g = wgs2gcj(wLa, wLo);
+    wLa -= (g[0] - la);
+    wLo -= (g[1] - lo);
+  }
+  return [wLa, wLo];
+}
 
-var osmFallback = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    {maxZoom: 19, subdomains: ['a','b','c']});
-var carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    {maxZoom: 19, subdomains: 'abcd', r: '@2x'});
+// ---- 底图 ----
+var layers = [
+  { key: 'gaode', name: '高德', gcj: true, attrib: '© 高德地图',
+    tile: L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+        { maxZoom: 18, subdomains: ['1','2','3','4'] }) },
+  { key: 'carto', name: '深色', gcj: false, attrib: '© OpenStreetMap · CARTO',
+    tile: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        { maxZoom: 19, subdomains: 'abcd', r: '@2x' }) },
+  { key: 'osm', name: 'OSM', gcj: false, attrib: '© OpenStreetMap',
+    tile: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }) }
+];
+var baseIdx = 0;
+var map = L.map('map', { zoomControl: true, attributionControl: false, worldCopyJump: true })
+            .setView([35.5, 105], 5);
+var currentLayer = null;
+var tileErr = 0;
 
-var tileFailed = 0;
-carto.on('tileerror', function () {
-    tileFailed++;
-    if (tileFailed > 4 && map.hasLayer(carto)) {
-        map.removeLayer(carto);
-        osmFallback.addTo(map);
-    }
-});
-carto.addTo(map);
+// 每个源的失败处理只注册一次（否则切回来会重复计数）
+for (var li = 0; li < layers.length; li++) {
+  (function (idx) {
+    layers[idx].tile.on('tileerror', function () {
+      if (idx !== baseIdx) return;
+      tileErr++;
+      if (tileErr > 4 && currentLayer === layers[idx].tile) {
+        applyBase(baseIdx + 1, true);   // 当前源连续失败 → 自动切下一个
+      }
+    });
+  })(li);
+}
 
-var stationLayer = L.layerGroup().addTo(map);
+function applyBase(idx, keepView) {
+  if (currentLayer) { map.removeLayer(currentLayer); }
+  baseIdx = ((idx % layers.length) + layers.length) % layers.length;
+  tileErr = 0;
+  currentLayer = layers[baseIdx].tile;
+  currentLayer.addTo(map);
+  document.getElementById('baseBtn').textContent = '底图:' + layers[baseIdx].name;
+  document.getElementById('attrib').textContent = layers[baseIdx].attrib;
+  renderAll();
+}
+function nextBase() { applyBase(baseIdx + 1, true); }
+
+// ---- 数据（一律存 WGS-84，渲染时按当前底图坐标系转换）----
+var meWGS = null;         // [lat, lon] 或 null
+var stationsWGS = [];     // [{call,lat,lon,cmt}]
 var meLayer = L.layerGroup().addTo(map);
+var stLayer = L.layerGroup().addTo(map);
 
+function disp(la, lo) {
+  return layers[baseIdx].gcj ? wgs2gcj(la, lo) : [la, lo];
+}
 function meIcon() {
-    return L.divIcon({className: '', html: '<div class="me-dot"></div>',
-                      iconSize: [17, 17], iconAnchor: [8, 8]});
+  return L.divIcon({className:'', html:'<div class="me-dot"></div>', iconSize:[17,17], iconAnchor:[8,8]});
 }
 function stIcon() {
-    return L.divIcon({className: '', html: '<div class="st-dot"></div>',
-                      iconSize: [11, 11], iconAnchor: [5, 5]});
+  return L.divIcon({className:'', html:'<div class="st-dot"></div>', iconSize:[11,11], iconAnchor:[5,5]});
+}
+function renderAll() {
+  meLayer.clearLayers();
+  stLayer.clearLayers();
+  if (meWGS) {
+    var m = disp(meWGS[0], meWGS[1]);
+    L.marker(m, {icon: meIcon(), zIndexOffset: 1000})
+      .addTo(meLayer).bindPopup('<b>极光信标</b><br>我的位置');
+  }
+  for (var i = 0; i < stationsWGS.length; i++) {
+    var s = stationsWGS[i];
+    var p = disp(s.lat, s.lon);
+    var cmt = String(s.cmt || '').replace(/[<>&]/g, '');
+    L.marker(p, {icon: stIcon()})
+      .addTo(stLayer)
+      .bindPopup('<b>' + String(s.call || '?').replace(/[<>&]/g, '') + '</b><br>' + cmt);
+  }
 }
 
 window.YG = {
-    setMe: function (lat, lon) {
-        meLayer.clearLayers();
-        L.marker([lat, lon], {icon: meIcon(), zIndexOffset: 1000})
-            .addTo(meLayer)
-            .bindPopup('<b>极光信标</b><br>我的位置');
-        map.setView([lat, lon], 15);
-    },
-    addStations: function (arr) {
-        stationLayer.clearLayers();
-        if (!arr || !arr.length) { return 0; }
-        for (var i = 0; i < arr.length; i++) {
-            var s = arr[i];
-            if (typeof s.lat !== 'number' || typeof s.lon !== 'number') { continue; }
-            if (Math.abs(s.lat) > 90 || Math.abs(s.lon) > 180) { continue; }
-            var cmt = (s.cmt || '').replace(/[<>&]/g, '');
-            L.marker([s.lat, s.lon], {icon: stIcon()})
-                .addTo(stationLayer)
-                .bindPopup('<b>' + String(s.call || '?').replace(/[<>&]/g, '') + '</b><br>' + cmt);
-        }
-        return arr.length;
-    },
-    clearStations: function () { stationLayer.clearLayers(); },
-    fitChina: function () { map.setView([35, 105], 5); },
-    zoomToMe: function (lat, lon) { map.setView([lat, lon], 15); },
-    ready: true
+  setMe: function (lat, lon) {
+    meWGS = [lat, lon];
+    renderAll();
+    var p = disp(lat, lon);
+    map.setView(p, Math.max(map.getZoom(), 15));
+  },
+  addStations: function (arr) {
+    stationsWGS = [];
+    if (arr && arr.length) {
+      for (var i = 0; i < arr.length; i++) {
+        var s = arr[i];
+        if (typeof s.lat !== 'number' || typeof s.lon !== 'number') continue;
+        if (Math.abs(s.lat) > 90 || Math.abs(s.lon) > 180) continue;
+        stationsWGS.push(s);
+      }
+    }
+    renderAll();
+    return stationsWGS.length;
+  },
+  clearStations: function () { stationsWGS = []; renderAll(); },
+  fitChina: function () { map.setView([35.5, 105], 5); },
+  zoomToMe: function () {
+    if (meWGS) { var p = disp(meWGS[0], meWGS[1]); map.setView(p, 15); }
+  },
+  nextBase: function () { nextBase(); },
+  ready: true
 };
+
+document.getElementById('baseBtn').addEventListener('click', function () { nextBase(); });
+
+// 默认高德（国内可达）；它连续失败会自动切 CARTO → OSM
+applyBase(0, false);
+map.setView([35.5, 105], 5);
 </script>
 </body>
 </html>
