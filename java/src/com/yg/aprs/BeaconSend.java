@@ -23,7 +23,7 @@ import java.util.Locale;
  */
 public final class BeaconSend {
 
-    private static final String VERS = "AuroraBeacon 1.4.4";
+    private static final String VERS = "AuroraBeacon 1.5.0";
     private static final int CONNECT_TIMEOUT_MS = 12000;
     private static final int READ_TIMEOUT_MS = 6000;
     private static final int MAX_ATTEMPTS = 2;
@@ -59,6 +59,12 @@ public final class BeaconSend {
         if (host.length() == 0 || call.length() == 0 || port <= 0) {
             NetLog.note("skip: config incomplete host=" + host + " port=" + port + " call=" + call);
             return false;
+        }
+        // 常驻连接（MsgAgent）在跑就走它，省一次握手，也让下行消息有地方收
+        if (MsgAgent.submit(line)) {
+            NetLog.note("sent via msg agent: " + line);
+            BeaconUi.LastFix.parse(line);
+            return true;
         }
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             Socket socket = null;

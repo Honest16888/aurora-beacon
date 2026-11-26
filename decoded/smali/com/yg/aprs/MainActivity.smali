@@ -1675,3 +1675,11 @@ const p1, 0x7f0901fd
 
     return-void
 .end method
+
+.method public onRefreshInbox(Landroid/view/View;)V
+    .registers 4
+
+    invoke-static {p0}, Lcom/yg/aprs/BeaconUi;->refreshInbox(Landroid/app/Activity;)V
+
+    return-void
+.end method

@@ -161,6 +161,15 @@ public final class BeaconUi {
                     + String.format(Locale.US, "{%02d", LastFix.nextSeq());
 
             BeaconSend.configure(act, host, port, full, pass);
+            if (MsgAgent.isConnected()) {
+                // 常驻连接在跑：进队列，由 MsgAgent 负责发送/重试/收 ack
+                MsgCenter.enqueue(dst, msg);
+                NetLog.note("message queued -> " + dst + " len=" + msg.length());
+                toast(act, "已加入发送队列：" + dst);
+                body.setText("");
+                return;
+            }
+            // 常驻连接没起来（例如服务未启动）：仍然用一次性连接发掉
             boolean ok = BeaconSend.send(packet);
             NetLog.note("message -> " + dst + " ok=" + ok + " len=" + msg.length());
             toast(act, ok ? "消息已提交给 APRS-IS：" + dst : "发送失败，详见 net.log");
@@ -170,6 +179,23 @@ public final class BeaconUi {
         } catch (Throwable t) {
             NetLog.note("message failed: " + t);
             toast(act, "发送失败：" + t);
+        }
+    }
+
+    /** 把收件箱/发件箱快照刷到界面上。 */
+    public static void refreshInbox(Activity act) {
+        if (act == null) {
+            return;
+        }
+        try {
+            TextView tv = find(act, "tvInbox");
+            if (tv == null) {
+                toast(act, "收件箱控件未找到");
+                return;
+            }
+            tv.setText(MsgCenter.render());
+        } catch (Throwable t) {
+            toast(act, "刷新失败：" + t);
         }
     }
 

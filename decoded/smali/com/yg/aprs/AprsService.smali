@@ -934,6 +934,8 @@
 .method public onCreate()V
     .locals 2
 
+    invoke-static {p0}, Lcom/yg/aprs/MsgAgent;->start(Landroid/content/Context;)V
+
     .line 36
     invoke-super {p0}, Landroid/app/Service;->onCreate()V
 
@@ -963,6 +965,8 @@
 
 .method public onDestroy()V
     .locals 3
+
+    invoke-static {}, Lcom/yg/aprs/MsgAgent;->stop()V
 
     const/4 v0, 0x1
 
