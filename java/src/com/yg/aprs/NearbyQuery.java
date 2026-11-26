@@ -45,6 +45,13 @@ public final class NearbyQuery {
     private static final double CN_LAT2 = 54.5;
     private static final double CN_LON2 = 135.5;
 
+    /**
+     * 全国范围用**半径过滤**而不是 b/ 矩形：实测 aprsc 3.0 对
+     * `b/17.5/73.0/54.5/135.5` 45 秒 0 流量，而 `r/35.0/105.0/2500` 同时段 215 行。
+     * 以武汉为圆心 3500km 覆盖中国全境（含新疆边缘）。
+     */
+    private static final String CN_FILTER = "r/35.0/105.0/3500";
+
     private NearbyQuery() {
     }
 
@@ -116,13 +123,11 @@ public final class NearbyQuery {
         return queryWithFilter(ctx, filter, lat, lon, WINDOW_MS);
     }
 
-    /** 全国：中国范围外接矩形。 */
+    /** 全国：中国范围（半径 3500km，见 CN_FILTER 注释）。 */
     public static List<Station> queryChina(Context ctx) {
-        String filter = String.format(Locale.US, "b/%f/%f/%f/%f",
-                CN_LAT1, CN_LON1, CN_LAT2, CN_LON2);
         double refLat = (CN_LAT1 + CN_LAT2) / 2.0;
         double refLon = (CN_LON1 + CN_LON2) / 2.0;
-        return queryWithFilter(ctx, filter, refLat, refLon, 12000L);
+        return queryWithFilter(ctx, CN_FILTER, refLat, refLon, 12000L);
     }
 
     public static List<Station> queryWithFilter(Context ctx, String filterLine,
@@ -161,10 +166,10 @@ public final class NearbyQuery {
                     new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
             BufferedReader r = new BufferedReader(
                     new InputStreamReader(socket.getInputStream(), "UTF-8"));
-            w.write("user " + full + " pass " + pass + " vers AuroraBeacon 1.8.1\r\n");
-            w.write("filter " + filterLine + "\r\n");
+            w.write("user " + full + " pass " + pass + " vers AuroraBeacon 1.8.2 filter "
+                    + filterLine + "\r\n");
             w.flush();
-            NetLog.note("query " + host + ":" + port + " filter " + filterLine);
+            NetLog.note("query " + host + ":" + port + " filter " + filterLine + " (inline)");
 
             long deadline = System.currentTimeMillis() + windowMs;
             while (System.currentTimeMillis() < deadline) {

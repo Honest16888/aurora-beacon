@@ -23,7 +23,7 @@ import java.util.Locale;
  */
 public final class BeaconSend {
 
-    private static final String VERS = "AuroraBeacon 1.5.0";
+    private static final String VERS = "AuroraBeacon 1.8.2";
     private static final int CONNECT_TIMEOUT_MS = 12000;
     private static final int READ_TIMEOUT_MS = 6000;
     private static final int MAX_ATTEMPTS = 2;

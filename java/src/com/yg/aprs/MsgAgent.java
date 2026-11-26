@@ -26,7 +26,7 @@ import java.util.Locale;
  */
 public final class MsgAgent {
 
-    private static final String VERS = "AuroraBeacon 1.5.0";
+    private static final String VERS = "AuroraBeacon 1.8.2";
     private static final int CONNECT_TIMEOUT_MS = 12000;
     private static final int READ_TIMEOUT_MS = 2000;
     private static final long RETRY_MS = 30000L;
@@ -166,8 +166,14 @@ public final class MsgAgent {
                 writer = new BufferedWriter(new OutputStreamWriter(s.getOutputStream(), "UTF-8"));
                 reader = new BufferedReader(new InputStreamReader(s.getInputStream(), "UTF-8"));
                 socket = s;
-                writer.write("user " + fullCall + " pass " + passcode + " vers " + VERS + "\r\n");
-                writer.write("filter m/" + baseCall + "\r\n");
+                // 实测 aprsc 3.0：不带 filter 一条数据都不发（收消息一直是空的根因），
+                // 且 filter 必须写在登录行里，单独发一行会被忽略。
+                String msgFilter = "filter m/" + baseCall;
+                if (fullCall != null && fullCall.length() > 0 && !fullCall.equals(baseCall)) {
+                    msgFilter = msgFilter + "," + fullCall;
+                }
+                writer.write("user " + fullCall + " pass " + passcode + " vers " + VERS
+                        + " " + msgFilter + "\r\n");
                 writer.flush();
             }
             connected = true;
