@@ -38,6 +38,9 @@ signing.properties
 /decoded/build/
 /javaout/
 /d8out/
+# 编译期桩产物（只用于 javac，不入库）
+/stubout/
+
 
 # ============================================================
 # 基线 APK 与反编译产物（依赖库部分不入库）

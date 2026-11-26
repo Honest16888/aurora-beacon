@@ -23,7 +23,7 @@ import java.util.Locale;
  */
 public final class BeaconSend {
 
-    private static final String VERS = "AuroraBeacon 1.4.3";
+    private static final String VERS = "AuroraBeacon 1.4.4";
     private static final int CONNECT_TIMEOUT_MS = 12000;
     private static final int READ_TIMEOUT_MS = 6000;
     private static final int MAX_ATTEMPTS = 2;
@@ -62,6 +62,7 @@ public final class BeaconSend {
         }
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             Socket socket = null;
+            boolean wrote = false;
             try {
                 socket = new Socket();
                 socket.setKeepAlive(true);
@@ -95,13 +96,21 @@ public final class BeaconSend {
                     writer.write("\r\n");
                 }
                 writer.flush();
+                // 已经冲刷到内核缓冲区：此后任何异常都不再重试，
+                // 否则网络抖动时同一包会被发两遍（拉高速率、点位乱跳）。
+                wrote = true;
                 NetLog.note("sent " + line.length() + "B: " + line);
+                BeaconUi.LastFix.parse(line);
 
                 closeQuietly(socket);
                 return true;
             } catch (Throwable t) {
                 NetLog.note("attempt " + attempt + " failed: " + t);
                 closeQuietly(socket);
+                if (wrote) {
+                    NetLog.note("already flushed, skip retry to avoid duplicate packet");
+                    return true;
+                }
                 if (attempt < MAX_ATTEMPTS) {
                     try {
                         Thread.sleep(RETRY_DELAY_MS);

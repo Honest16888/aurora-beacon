@@ -53,6 +53,16 @@ java -jar apktool.jar d baseline.apk -o decoded
 
 产物默认输出到 `dist/aurora-beacon-<version>.apk`。
 
+### 关于 `java/stubs/`
+
+新代码若要调用应用内已有类（`Prefs`、`AprsPasscode`、`Status` …），
+在 `java/stubs/com/yg/aprs/AppStubs.java` 里写上**与 smali 完全一致**的签名，
+`javac` 就能通过；这些桩只参与编译（输出到 `stubout/`），**不会**打进 `classes2.dex`，
+运行时用的是 `classes.dex` 里的真实实现。
+
+签名对不上（字段 `INSTANCE`、方法名、参数或返回类型）不会在编译期报错，
+只会在运行时 `NoSuchMethodError` / `NoSuchFieldError`——加方法时务必对照 smali 核对一遍。
+
 ### 参数
 
 | 参数 | 默认值 | 说明 |

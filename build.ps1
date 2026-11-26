@@ -119,10 +119,31 @@ else {
     Remove-Item $javaout -Recurse -Force -ErrorAction Ignore
     New-Item -ItemType Directory $javaout | Out-Null
 
+    # 先编译“桩”（java/stubs）：给出应用内已有类的签名，让新代码能通过 javac；
+    # 桩编译出的 class 只用于编译期，不参与 d8，绝不会打进 classes2.dex。
+    $stubout = Join-Path $Root 'stubout'
+    $stubCp = ''
+    $stubDir = Join-Path $Root 'java\stubs'
+    if (Test-Path $stubDir) {
+        Remove-Item $stubout -Recurse -Force -ErrorAction Ignore
+        New-Item -ItemType Directory $stubout | Out-Null
+        $stubs = Get-ChildItem $stubDir -Recurse -Filter *.java | ForEach-Object { $_.FullName }
+        Info "javac(桩)：$($stubs.Count) 个源文件"
+        & $javac -encoding UTF-8 -source 8 -target 8 -nowarn `
+            -bootclasspath $PlatformJar -d $stubout $stubs
+        if ($LASTEXITCODE -ne 0) { Die 'javac 编译桩失败' }
+        $stubCp = $stubout
+    }
+
     $sources = Get-ChildItem $srcDir -Recurse -Filter *.java | ForEach-Object { $_.FullName }
     Info "javac：$($sources.Count) 个源文件"
-    & $javac -encoding UTF-8 -source 8 -target 8 -nowarn `
-        -bootclasspath $PlatformJar -d $javaout $sources
+    if ($stubCp) {
+        & $javac -encoding UTF-8 -source 8 -target 8 -nowarn `
+            -bootclasspath $PlatformJar -classpath $stubCp -d $javaout $sources
+    } else {
+        & $javac -encoding UTF-8 -source 8 -target 8 -nowarn `
+            -bootclasspath $PlatformJar -d $javaout $sources
+    }
     if ($LASTEXITCODE -ne 0) { Die 'javac 编译失败（API 调用有误，先看这里的报错）' }
 
     Remove-Item $d8out -Recurse -Force -ErrorAction Ignore

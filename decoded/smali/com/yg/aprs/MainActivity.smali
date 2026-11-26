@@ -1659,3 +1659,19 @@ const p1, 0x7f0901fd
     :goto_3
     return-void
 .end method
+
+.method public onSendMessage(Landroid/view/View;)V
+    .registers 4
+
+    invoke-static {p0}, Lcom/yg/aprs/BeaconUi;->sendMessage(Landroid/app/Activity;)V
+
+    return-void
+.end method
+
+.method public onOpenMap(Landroid/view/View;)V
+    .registers 4
+
+    invoke-static {p0}, Lcom/yg/aprs/BeaconUi;->openMap(Landroid/app/Activity;)V
+
+    return-void
+.end method
