@@ -114,3 +114,10 @@ __pycache__/
 /libs/**/*.jar
 /decoded/lib/
 /baidu.aar
+
+# 参考 app 的反编译产物（第三方，仅本地分析）
+/ref_decoded/
+/ref.apk
+
+# 一次性文档脚本
+/docs_update*.py
