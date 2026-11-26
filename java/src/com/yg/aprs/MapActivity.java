@@ -327,6 +327,8 @@ public class MapActivity extends Activity {
                 o.put("lat", Math.round(st.lat * 1e6) / 1e6);
                 o.put("lon", Math.round(st.lon * 1e6) / 1e6);
                 o.put("cmt", st.comment == null ? "" : st.comment);
+                o.put("n", st.country);
+                o.put("k", st.kind);
                 arr.put(o);
             }
             return arr.toString();

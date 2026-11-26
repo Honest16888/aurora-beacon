@@ -136,9 +136,14 @@ function renderAll() {
     var s = stationsWGS[i];
     var p = disp(s.lat, s.lon);
     var cmt = String(s.cmt || '').replace(/[<>&]/g, '');
+    var tags = [];
+    if (s.n) tags.push(String(s.n).replace(/[<>&]/g, ''));
+    if (s.k) tags.push(String(s.k).replace(/[<>&]/g, ''));
+    var head = '<b>' + String(s.call || '?').replace(/[<>&]/g, '') + '</b>';
+    if (tags.length) head += '<br>' + tags.join(' · ');
     L.marker(p, {icon: stIcon()})
       .addTo(stLayer)
-      .bindPopup('<b>' + String(s.call || '?').replace(/[<>&]/g, '') + '</b><br>' + cmt);
+      .bindPopup(head + (cmt ? '<br>' + cmt : ''));
   }
 }
 
