@@ -54,12 +54,55 @@ public class BaiduMapActivity extends Activity {
                 Toast.makeText(from, "还没有定位数据，先启动上报", Toast.LENGTH_SHORT).show();
                 return;
             }
+            if (!preflightOk(from)) {
+                Toast.makeText(from, "当前设备不支持百度地图 SDK，已打开网页地图",
+                        Toast.LENGTH_LONG).show();
+                MapActivity.show(from);
+                return;
+            }
             from.startActivity(new Intent(from, BaiduMapActivity.class));
         } catch (Throwable t) {
             try {
                 MapActivity.show(from);
             } catch (Throwable ignored) {
             }
+        }
+    }
+
+    /**
+     * 进百度地图前的预检：设备 ABI 是否在打包范围内、原生库是否真的被解压出来。
+     * 这两项不满足时强行进去只有两种结果：白屏或 native 崩溃，所以先拦下来走网页地图。
+     */
+    private static boolean preflightOk(Activity act) {
+        try {
+            String[] abis = android.os.Build.SUPPORTED_ABIS;
+            boolean abiOk = false;
+            if (abis != null) {
+                for (int i = 0; i < abis.length; i++) {
+                    if ("arm64-v8a".equals(abis[i]) || "armeabi-v7a".equals(abis[i])) {
+                        abiOk = true;
+                        break;
+                    }
+                }
+            }
+            if (!abiOk) {
+                NetLog.note("baidu preflight: unsupported abi " + (abis == null ? "?" : abis[0]));
+                return false;
+            }
+            String libDir = act.getApplicationInfo().nativeLibraryDir;
+            if (libDir == null) {
+                NetLog.note("baidu preflight: nativeLibraryDir null");
+                return false;
+            }
+            java.io.File f = new java.io.File(libDir, "libBaiduMapSDK_base_v7_5_2.so");
+            if (!f.exists()) {
+                NetLog.note("baidu preflight: missing " + f);
+                return false;
+            }
+            return true;
+        } catch (Throwable t) {
+            NetLog.note("baidu preflight failed: " + t);
+            return false;
         }
     }
 
@@ -104,7 +147,12 @@ public class BaiduMapActivity extends Activity {
         }
 
         if (!ready) {
-            setContentView(fallback(err, la, lo));
+            NetLog.note("baidu init failed, redirect to web map: " + err);
+            try {
+                MapActivity.show(this);
+            } catch (Throwable ignored) {
+            }
+            finish();
             return;
         }
 

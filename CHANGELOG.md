@@ -9,6 +9,35 @@
 
 ---
 
+## [1.7.3] - 2026-11-26
+
+### 修复
+
+- **点「地图」直接闪退**
+
+  1.7.2 修掉 marker 异常之后，`MapView` 第一次真正渲染，暴露出**原生层崩溃**
+  （不是 Java 异常，`catch` 拦不住，所以连降级页都没出来）。
+
+  处理方式：
+
+  1. **主入口回退到网页地图**（`MapActivity`，已知稳定）：点「地图」不再直接进百度地图
+  2. 百度地图改为**网页地图页里的「百度SDK」按钮**，且进入前做预检：
+     - 设备 ABI 必须在打包范围（`arm64-v8a` / `armeabi-v7a`）
+     - `nativeLibraryDir` 里必须真的存在 `libBaiduMapSDK_base_v7_5_2.so`
+     - 任一不满足 → 提示「当前设备不支持百度地图 SDK」并留在网页地图，**不会进去崩**
+  3. 百度页初始化失败时不再显示错误页，而是直接跳回网页地图并 `finish()`，
+     日志里留 `baidu init failed, redirect to web map: ...`
+
+### 说明
+
+- 原生崩溃堆栈不会进 `crash.txt`（那是 `Thread.UncaughtExceptionHandler`，只管 Java 异常）。
+  要定位需要 `adb logcat -b crash`，关键行是 `Fatal signal 11 (SIGSEGV)` 与
+  `libBaiduMapSDK_*.so` / `libgnustl_shared.so` 的 backtrace
+- 想继续用真 SDK 渲染，下一步应换成地图页 `MapFragment` 或改 `BaiduMapOptions` 的
+  GL 参数；也可以直接换高德 SDK 对比
+
+---
+
 ## [1.7.2] - 2026-11-26
 
 ### 修复

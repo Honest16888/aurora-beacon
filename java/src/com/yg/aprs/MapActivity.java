@@ -109,6 +109,12 @@ public class MapActivity extends Activity {
                 loadAprsFi();
             }
         }), lp(1f, dp(8)));
+        bar.addView(button("百度SDK", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BaiduMapActivity.show(MapActivity.this);
+            }
+        }), lp(1f, dp(8)));
 
         LinearLayout bar2 = new LinearLayout(this);
         bar2.setOrientation(LinearLayout.HORIZONTAL);

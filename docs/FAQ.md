@@ -186,6 +186,20 @@ APRS-IS 拒收；现在启动和发消息前都会自动拆成 base + SSID 写�
 
 查不到台站的常见原因：周边 8 秒内确实没人发；或所用服务器过滤未生效（换 `rotate.aprs2.net` 再试）。
 
+### Q：点「地图」闪退 / 百度地图进来就崩？
+
+- **1.7.3 起主入口已回退为网页地图**，点「地图」不会再崩
+- 想试百度原生的：网页地图页 →「百度SDK」。进入前会检查 ABI 与原生库，
+  不满足会提示「当前设备不支持百度地图 SDK」并留在网页地图
+- 如果「百度SDK」仍然闪退，那是**原生层崩溃**（不是 Java 异常，`crash.txt` 里没有），需要：
+
+```bash
+adb logcat -b crash -d > native.txt
+```
+
+  关键行：`Fatal signal 11 (SIGSEGV)` + `libBaiduMapSDK_*` / `libgnustl_shared.so` 的 backtrace。
+  这份日志能直接判断是 GL 初始化、ABI 混用还是 SDK 自身问题。
+
 ### Q：地图页提示"百度地图初始化失败"怎么办？
 
 1.7.2 之前的版本有个坑：百度 SDK **不给默认 marker 图标**，`MarkerOptions` 少了 `icon()`
