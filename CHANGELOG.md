@@ -9,6 +9,44 @@
 
 ---
 
+## [1.7.0] - 2026-11-26
+
+### 新增
+
+- **接入百度地图 SDK（真·内置地图）**
+
+  | 项 | 内容 |
+  |---|---|
+  | SDK | 百度 LBS Android **v7.5.2**（官方 AAR：`BaiduLBS_aar_Android_V7.5.2.aar`） |
+  | Java 类 | `classes.jar` 经 d8 进入 `classes2.dex`（共 1143 个 `com.baidu.*` 类） |
+  | 原生库 | `lib/arm64-v8a/` 与 `lib/armeabi-v7a/` 各 4 个 `.so`（约 14.2 MB） |
+  | 清单 | 新增 `ACCESS_WIFI_STATE`、`CHANGE_WIFI_STATE`、`READ/WRITE_EXTERNAL_STORAGE`、`BaiduMapActivity`，`extractNativeLibs` 改为 `true` |
+  | AK | `com.baidu.lbsapi.API_KEY` meta-data |
+
+  `BaiduMapActivity` 的关键处理：
+  - **初始化顺序**：先 `SDKInitializer.setAgreePrivacy(ctx, true)` 再 `initialize(ctx)`
+    （反了就白屏）
+  - **坐标系**：APRS 是 WGS-84 → 先转 GCJ-02 → 再转 BD-09，否则在百度地图上会偏 ~500 米
+  - **不崩**：`MapView` 创建/初始化/加 marker 全在 try-catch 里，任何一步失败
+    （AK 与签名不匹配、ABI 不支持、隐私未同意）都降级到网页地图，并显示错误原因
+  - 页内按钮：`回中 / 附近台站 / 网页地图 / 关闭`
+
+- 主界面「地图」改为进入百度地图页；SDK 起不来时自动落到 1.6.x 的 WebView 地图页。
+
+### 变更
+
+- APK 体积：**4.9 MB → 12.7 MB**（SDK 原生库所致）
+- `build.ps1`：自动把 `libs/**/*.jar` 加入 javac classpath 与 d8 输入；
+  `$ErrorActionPreference` 改为 `Continue`（javac 的 Note 走 stderr，`Stop` 会误判为失败）
+
+### 说明
+
+- SDK 二进制（`libs/*.jar`、`decoded/lib/*.so`）**不入库**，`.gitignore` 已排除；
+  自己构建请按 [docs/BUILD.md](docs/BUILD.md) 的「接入百度地图 SDK」一节下载 AAR 并解压
+- AK 已按「包名 `com.yg.aprs` + 签名 SHA1 `87:92:…:0A`」预置；换签名需重新申请
+
+---
+
 ## [1.6.1] - 2026-11-26
 
 ### 新增

@@ -61,7 +61,9 @@ param(
     [string]$PlatformJar = "$env:LOCALAPPDATA\Android\Sdk\platforms\android-34\android.jar"
 )
 
-$ErrorActionPreference = 'Stop'
+# 注意：javac/d8 等原生命令会把提示写到 stderr，Stop 会把提示当成错误终止构建；
+# 这里用 Continue，靠脚本里每步的 `if ($LASTEXITCODE -ne 0) { Die ... }` 兜底。
+$ErrorActionPreference = 'Continue'
 $Root = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
 Set-Location $Root
 
@@ -135,11 +137,22 @@ else {
         $stubCp = $stubout
     }
 
+    # 第三方 SDK 的 jar（libs/**/*.jar）：既参与 javac 编译，也要进 d8
+    $libDir = Join-Path $Root 'libs'
+    $jars = @()
+    if (Test-Path $libDir) {
+        $jars = @(Get-ChildItem $libDir -Recurse -Filter *.jar | ForEach-Object { $_.FullName })
+    }
+    $cpParts = @()
+    if ($stubCp) { $cpParts += $stubCp }
+    if ($jars.Count -gt 0) { $cpParts += ($jars -join ';') }
+    $classPath = ($cpParts -join ';')
+
     $sources = Get-ChildItem $srcDir -Recurse -Filter *.java | ForEach-Object { $_.FullName }
-    Info "javac：$($sources.Count) 个源文件"
-    if ($stubCp) {
+    Info "javac：$($sources.Count) 个源文件；第三方 jar：$($jars.Count) 个"
+    if ($classPath) {
         & $javac -encoding UTF-8 -source 8 -target 8 -nowarn `
-            -bootclasspath $PlatformJar -classpath $stubCp -d $javaout $sources
+            -bootclasspath $PlatformJar -classpath $classPath -d $javaout $sources
     } else {
         & $javac -encoding UTF-8 -source 8 -target 8 -nowarn `
             -bootclasspath $PlatformJar -d $javaout $sources
@@ -150,7 +163,7 @@ else {
     New-Item -ItemType Directory $d8out | Out-Null
     $classes = Get-ChildItem $javaout -Recurse -Filter *.class | ForEach-Object { $_.FullName }
     Info "d8：$($classes.Count) 个 class → classes2.dex"
-    & $d8 --min-api 26 --lib $PlatformJar --release --output $d8out $classes
+    & $d8 --min-api 26 --lib $PlatformJar --release --output $d8out @($classes + $jars)
     if ($LASTEXITCODE -ne 0) { Die 'd8 失败' }
 }
 

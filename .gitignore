@@ -108,3 +108,9 @@ crash.txt
 /extracted/
 __pycache__/
 *.pyc
+
+# 第三方地图 SDK 的二进制（从百度官方 AAR 解出，不入库；见 docs/BUILD.md）
+/libs/*.jar
+/libs/**/*.jar
+/decoded/lib/
+/baidu.aar

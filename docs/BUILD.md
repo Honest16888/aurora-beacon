@@ -53,6 +53,36 @@ java -jar apktool.jar d baseline.apk -o decoded
 
 产物默认输出到 `dist/aurora-beacon-<version>.apk`。
 
+### 接入百度地图 SDK（本仓库不含 SDK 二进制）
+
+1.6.1 之后的地图页依赖百度 LBS SDK。仓库里**只有代码**，二进制需要自己准备：
+
+```powershell
+# 1) 下载官方 AAR（22 MB）
+curl.exe -L -o baidu.aar "https://mapopen-pub-androidsdk.bj.bcebos.com/mapCom/BaiduLBS_aar_Android_V7.5.2.aar"
+
+# 2) 解出 classes.jar 与两个 ABI 的 .so
+python - <<'PY'
+import zipfile, os
+z = zipfile.ZipFile('baidu.aar')
+os.makedirs('libs/baidu', exist_ok=True)
+open('libs/baidu/classes.jar', 'wb').write(z.read('classes.jar'))
+for abi in ('arm64-v8a', 'armeabi-v7a'):
+    d = os.path.join('decoded', 'lib', abi)
+    os.makedirs(d, exist_ok=True)
+    for n in z.namelist():
+        if n.startswith('jni/%s/' % abi) and n.endswith('.so'):
+            open(os.path.join(d, os.path.basename(n)), 'wb').write(z.read(n))
+PY
+```
+
+3. 清单里必须：`android:extractNativeLibs="true"`（有 `.so` 时必须解压）
+4. `libs/**/*.jar` 会被 `build.ps1` 自动加进 javac classpath 与 d8 输入
+5. AK 在 `AndroidManifest.xml` 的 `com.baidu.lbsapi.API_KEY`，与「包名 + 签名 SHA1」绑定：
+   `com.yg.aprs` / `87:92:28:49:6A:FF:AE:E5:F6:53:AB:91:E5:58:E0:A1:06:78:6D:0A`
+
+> SDK 二进制已在 `.gitignore` 中排除，不要提交（体积 + 分发授权）。
+
 ### 关于 `java/stubs/`
 
 新代码若要调用应用内已有类（`Prefs`、`AprsPasscode`、`Status` …），
