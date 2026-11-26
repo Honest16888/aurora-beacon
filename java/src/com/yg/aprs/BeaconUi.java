@@ -60,7 +60,12 @@ public final class BeaconUi {
             char hemi = s.charAt(s.length() - 1);
             String num = s.substring(0, s.length() - 1);
             int dot = num.indexOf('.');
-            String degPart = (dot == 2) ? num.substring(0, 2) : num.substring(0, 3);
+            // "ddmm.mm" 的点在索引 4，"dddmm.mm" 的点在索引 5；度数位数 = dot - 2
+            int degDigits = dot - 2;
+            if (degDigits <= 0) {
+                throw new IllegalArgumentException("bad coord: " + s);
+            }
+            String degPart = num.substring(0, degDigits);
             double deg = Double.parseDouble(degPart);
             double min = Double.parseDouble(num.substring(degPart.length()));
             double v = deg + min / 60.0;

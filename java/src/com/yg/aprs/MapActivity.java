@@ -97,19 +97,45 @@ public class MapActivity extends Activity {
                 loadAmap();
             }
         }), lp(1f, 0));
-        bar.addView(button("百度页", new View.OnClickListener() {
+        bar.addView(button("附近台站", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                NearbyQuery.run(MapActivity.this);
+            }
+        }), lp(1f, dp(8)));
+        bar.addView(button("aprs.fi", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loadAprsFi();
+            }
+        }), lp(1f, dp(8)));
+
+        LinearLayout bar2 = new LinearLayout(this);
+        bar2.setOrientation(LinearLayout.HORIZONTAL);
+        bar2.setGravity(Gravity.CENTER_VERTICAL);
+        bar2.setPadding(dp(10), 0, dp(10), dp(12));
+
+        bar2.addView(button("百度页", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 loadBaidu();
             }
-        }), lp(1f, dp(8)));
-        bar.addView(button("地图App", new View.OnClickListener() {
+        }), lp(1f, 0));
+        bar2.addView(button("地图App", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 BeaconUi.openMap(MapActivity.this);
             }
         }), lp(1f, dp(8)));
+        bar2.addView(button("关闭", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        }), lp(1f, dp(8)));
         root.addView(bar, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        root.addView(bar2, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         setContentView(root);
@@ -124,6 +150,17 @@ public class MapActivity extends Activity {
                     + "&name=" + android.net.Uri.encode("极光信标")
                     + "&coordinate=wgs84&callnative=0";
             load(url, "高德网页");
+        } catch (Throwable t) {
+            hint.setText("加载失败：" + t);
+        }
+    }
+
+    /** aprs.fi 在线地图，能看到周边所有台站（包括非本软件的设备）。 */
+    private void loadAprsFi() {
+        try {
+            String url = String.format(Locale.US,
+                    "https://aprs.fi/#!lat=%.6f&lng=%.6f&z=12", lat, lon);
+            load(url, "aprs.fi 周边");
         } catch (Throwable t) {
             hint.setText("加载失败：" + t);
         }
