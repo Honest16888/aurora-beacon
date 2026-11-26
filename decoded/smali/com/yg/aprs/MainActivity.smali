@@ -1663,7 +1663,7 @@ const p1, 0x7f0901fd
 .method public onSendMessage(Landroid/view/View;)V
     .registers 4
 
-    invoke-static {p0}, Lcom/yg/aprs/BeaconUi;->sendMessage(Landroid/app/Activity;)V
+    invoke-static {p0}, Lcom/yg/aprs/MsgUi;->sendFromFields(Landroid/app/Activity;)V
 
     return-void
 .end method
@@ -1679,7 +1679,7 @@ const p1, 0x7f0901fd
 .method public onRefreshInbox(Landroid/view/View;)V
     .registers 4
 
-    invoke-static {p0}, Lcom/yg/aprs/BeaconUi;->refreshInbox(Landroid/app/Activity;)V
+    invoke-static {p0}, Lcom/yg/aprs/MsgUi;->showInbox(Landroid/app/Activity;)V
 
     return-void
 .end method

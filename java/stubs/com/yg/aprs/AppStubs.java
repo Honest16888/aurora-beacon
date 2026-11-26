@@ -28,6 +28,12 @@ final class Prefs {
         return null;
     }
 
+    void setCallsign(Context c, String value) {
+    }
+
+    void setSsid(Context c, int value) {
+    }
+
     int getInterval(Context c) {
         return 0;
     }

@@ -7,8 +7,8 @@ sdkInfo:
   minSdkVersion: 26
   targetSdkVersion: 33
 versionInfo:
-  versionCode: 13
-  versionName: 1.5.1-aurora
+  versionCode: 14
+  versionName: 1.5.2-aurora
 resourcesInfo:
   packageId: 127
 doNotCompress:

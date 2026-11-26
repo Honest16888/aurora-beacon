@@ -54,6 +54,8 @@ public final class MsgAgent {
             return;
         }
         try {
+            // 呼号框若被填成 CALL-SSID，先拆开写回设置，避免出现 CALL-SSID-SSID
+            MsgUi.fixCallsignPrefs(context);
             baseCall = Prefs.INSTANCE.getCallsign(context);
             if (baseCall == null) {
                 baseCall = "";

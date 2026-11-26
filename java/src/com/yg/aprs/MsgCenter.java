@@ -29,6 +29,19 @@ public final class MsgCenter {
         }
     }
 
+    /** 收件箱里的一条消息（给界面用）。 */
+    public static final class Item {
+        public final String time;
+        public final String from;
+        public final String text;
+
+        Item(String time, String from, String text) {
+            this.time = time;
+            this.from = from;
+            this.text = text;
+        }
+    }
+
     private static final int MAX_INBOX = 50;
     private static final int MAX_OUTBOX = 30;
 
@@ -63,6 +76,20 @@ public final class MsgCenter {
         while (INBOX.size() > MAX_INBOX) {
             INBOX.remove(0);
         }
+    }
+
+    /** 收件箱快照，最新在前。 */
+    public static synchronized List<Item> inboxSnapshot() {
+        List<Item> r = new ArrayList<Item>();
+        for (int i = INBOX.size() - 1; i >= 0; i--) {
+            String[] m = INBOX.get(i);
+            r.add(new Item(m[0], m[1], m[2]));
+        }
+        return r;
+    }
+
+    public static synchronized void clearInbox() {
+        INBOX.clear();
     }
 
     public static synchronized Out enqueue(String dst, String text) {
