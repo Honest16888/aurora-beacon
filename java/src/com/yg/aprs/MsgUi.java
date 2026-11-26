@@ -31,6 +31,7 @@ public final class MsgUi {
         if (act == null) {
             return;
         }
+        MsgCenter.ensureLoaded(act);
         // 顺便把卡片下方的摘要刷新一下
         try {
             TextView summary = find(act, "tvInbox");
@@ -158,6 +159,7 @@ public final class MsgUi {
             return false;
         }
         try {
+            MsgCenter.ensureLoaded(act);
             String dst = normalizeCall(dstRaw);
             String text = (textRaw == null) ? "" : textRaw.trim();
             if (dst.length() == 0) {

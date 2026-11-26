@@ -69,6 +69,7 @@ public final class MsgAgent {
             }
             port = Prefs.INSTANCE.getPort(context);
             NetLog.init(context);
+            MsgCenter.ensureLoaded(context);
         } catch (Throwable t) {
             NetLog.note("msg agent config failed: " + t);
             return;
@@ -245,15 +246,16 @@ public final class MsgAgent {
     private static void handle(String line) {
         try {
             int sep = line.indexOf("::");
-            if (sep < 0 || line.length() < sep + 11) {
+            if (sep < 0 || line.length() < sep + 4) {
                 return;
             }
-            String addr = line.substring(sep + 2, sep + 11).trim();
+            // 收件人字段固定 9 字符，但部分客户端不补空格：以「收件人后第一个冒号」为准
+            int colon = line.indexOf(':', sep + 2);
+            if (colon < 0 || colon - (sep + 2) > 9 || line.length() <= colon + 1) {
+                return;
+            }
+            String addr = line.substring(sep + 2, colon).trim();
             if (!isForMe(addr)) {
-                return;
-            }
-            int colon = line.indexOf(':', sep + 11);
-            if (colon < 0) {
                 return;
             }
             String body = line.substring(colon + 1);

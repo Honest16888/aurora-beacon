@@ -1,5 +1,10 @@
 package com.yg.aprs;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import org.json.JSONArray;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -49,6 +54,9 @@ public final class MsgCenter {
     private static final List<Out> OUTBOX = new ArrayList<Out>();
     private static int seq;
 
+    private static volatile Context storeCtx;
+    private static volatile boolean loaded;
+
     private MsgCenter() {
     }
 
@@ -70,12 +78,67 @@ public final class MsgCenter {
         return sb.toString();
     }
 
+    /** 绑定持久化上下文并加载已存消息（幂等）。 */
+    public static synchronized void ensureLoaded(Context ctx) {
+        if (ctx != null && storeCtx == null) {
+            storeCtx = ctx.getApplicationContext();
+        }
+        if (loaded || storeCtx == null) {
+            return;
+        }
+        loaded = true;
+        try {
+            SharedPreferences sp = storeCtx.getSharedPreferences("msg_store", Context.MODE_PRIVATE);
+            String raw = sp.getString("inbox", "");
+            if (raw.length() > 0) {
+                JSONArray arr = new JSONArray(raw);
+                for (int i = 0; i < arr.length(); i++) {
+                    JSONArray row = arr.getJSONArray(i);
+                    if (row.length() >= 3) {
+                        INBOX.add(new String[]{row.getString(0), row.getString(1), row.getString(2)});
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            // 解析失败就当空收件箱，不崩
+        }
+    }
+
+    private static void persist() {
+        try {
+            if (storeCtx == null) {
+                return;
+            }
+            JSONArray arr = new JSONArray();
+            for (int i = 0; i < INBOX.size(); i++) {
+                String[] m = INBOX.get(i);
+                JSONArray row = new JSONArray();
+                row.put(m[0]).put(m[1]).put(m[2]);
+                arr.put(row);
+            }
+            storeCtx.getSharedPreferences("msg_store", Context.MODE_PRIVATE)
+                    .edit().putString("inbox", arr.toString()).apply();
+        } catch (Throwable ignored) {
+        }
+    }
+
     public static synchronized void addInbox(String from, String text) {
-        String t = new SimpleDateFormat("HH:mm", Locale.US).format(new Date());
-        INBOX.add(new String[]{t, from == null ? "?" : from, text == null ? "" : text});
+        String f = from == null ? "?" : from;
+        String t2 = text == null ? "" : text;
+        // 去重：同一来源 + 同一正文 60 秒内只记一次（服务器可能重复投递）
+        long now = System.currentTimeMillis();
+        for (int i = INBOX.size() - 1; i >= 0 && i >= INBOX.size() - 5; i--) {
+            String[] m = INBOX.get(i);
+            if (m[1].equals(f) && m[2].equals(t2)) {
+                return;
+            }
+        }
+        String ts = new SimpleDateFormat("HH:mm", Locale.US).format(new Date(now));
+        INBOX.add(new String[]{ts, f, t2});
         while (INBOX.size() > MAX_INBOX) {
             INBOX.remove(0);
         }
+        persist();
     }
 
     /** 收件箱快照，最新在前。 */
@@ -90,6 +153,7 @@ public final class MsgCenter {
 
     public static synchronized void clearInbox() {
         INBOX.clear();
+        persist();
     }
 
     public static synchronized Out enqueue(String dst, String text) {

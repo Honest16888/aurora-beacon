@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel="stylesheet" href="leaflet.css">
+<style>
+html,body,#map{margin:0;padding:0;height:100%;width:100%;background:#0A1020;overflow:hidden}
+.st-dot{width:11px;height:11px;border-radius:50%;background:#FF8A3D;border:1.5px solid #fff;box-shadow:0 0 5px rgba(0,0,0,.7)}
+.me-dot{width:17px;height:17px;border-radius:50%;background:#2DD4BF;border:2.5px solid #fff;box-shadow:0 0 10px #2DD4BF}
+.leaflet-popup-content-wrapper{background:#16233A;color:#E8EEF6;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.leaflet-popup-tip{background:#16233A}
+.leaflet-popup-content{margin:8px 12px;font:13px/1.45 -apple-system,"PingFang SC",sans-serif}
+.leaflet-popup-content b{color:#2DD4BF}
+.leaflet-bar a{background:#16233A;color:#93A4BC;border-color:#2A3B55}
+.leaflet-bar a:hover{background:#1E2E48;color:#E8EEF6}
+.attrib{position:absolute;bottom:2px;right:6px;font:10px/1.2 sans-serif;color:#54657E;z-index:1000;background:rgba(10,16,32,.6);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="attrib">© OpenStreetMap · CARTO</div>
+<script src="leaflet.js"></script>
+<script>
+var map = L.map('map', {zoomControl: true, attributionControl: false, worldCopyJump: true})
+            .setView([35, 105], 5);
+
+var osmFallback = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {maxZoom: 19, subdomains: ['a','b','c']});
+var carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    {maxZoom: 19, subdomains: 'abcd', r: '@2x'});
+
+var tileFailed = 0;
+carto.on('tileerror', function () {
+    tileFailed++;
+    if (tileFailed > 4 && map.hasLayer(carto)) {
+        map.removeLayer(carto);
+        osmFallback.addTo(map);
+    }
+});
+carto.addTo(map);
+
+var stationLayer = L.layerGroup().addTo(map);
+var meLayer = L.layerGroup().addTo(map);
+
+function meIcon() {
+    return L.divIcon({className: '', html: '<div class="me-dot"></div>',
+                      iconSize: [17, 17], iconAnchor: [8, 8]});
+}
+function stIcon() {
+    return L.divIcon({className: '', html: '<div class="st-dot"></div>',
+                      iconSize: [11, 11], iconAnchor: [5, 5]});
+}
+
+window.YG = {
+    setMe: function (lat, lon) {
+        meLayer.clearLayers();
+        L.marker([lat, lon], {icon: meIcon(), zIndexOffset: 1000})
+            .addTo(meLayer)
+            .bindPopup('<b>极光信标</b><br>我的位置');
+        map.setView([lat, lon], 15);
+    },
+    addStations: function (arr) {
+        stationLayer.clearLayers();
+        if (!arr || !arr.length) { return 0; }
+        for (var i = 0; i < arr.length; i++) {
+            var s = arr[i];
+            if (typeof s.lat !== 'number' || typeof s.lon !== 'number') { continue; }
+            if (Math.abs(s.lat) > 90 || Math.abs(s.lon) > 180) { continue; }
+            var cmt = (s.cmt || '').replace(/[<>&]/g, '');
+            L.marker([s.lat, s.lon], {icon: stIcon()})
+                .addTo(stationLayer)
+                .bindPopup('<b>' + String(s.call || '?').replace(/[<>&]/g, '') + '</b><br>' + cmt);
+        }
+        return arr.length;
+    },
+    clearStations: function () { stationLayer.clearLayers(); },
+    fitChina: function () { map.setView([35, 105], 5); },
+    zoomToMe: function (lat, lon) { map.setView([lat, lon], 15); },
+    ready: true
+};
+</script>
+</body>
+</html>

@@ -65,6 +65,82 @@ public final class NearbyQuery {
         }
     }
 
+    /** 详情列表（地图页用）：点条目看详情对话框，不跳外部浏览器。 */
+    public static void showDetailList(final Activity act, List<Station> list) {
+        if (act == null) {
+            return;
+        }
+        if (list == null || list.isEmpty()) {
+            AlertDialog.Builder b = new AlertDialog.Builder(act);
+            b.setTitle("附近台站");
+            b.setMessage("8 秒内没有收到 60 公里内的位置包。\n\n"
+                    + "可能周边确实没有活动台站，或换 rotate.aprs2.net 再试。");
+            b.setPositiveButton("关闭", null);
+            b.show();
+            return;
+        }
+        int n = Math.min(list.size(), MAX_SHOW);
+        final List<Station> shown = list.subList(0, n);
+        String[] items = new String[n];
+        for (int i = 0; i < n; i++) {
+            Station st = shown.get(i);
+            String note = st.comment.length() > 22 ? st.comment.substring(0, 22) + "…" : st.comment;
+            items[i] = String.format(Locale.US, "%s   %.1f km %s\n%s",
+                    st.call, st.km, bearing(beaconLat(act), beaconLon(act), st.lat, st.lon), note);
+        }
+        AlertDialog.Builder b = new AlertDialog.Builder(act);
+        b.setTitle("附近台站（" + shown.size() + "/" + list.size() + "）");
+        b.setItems(items, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface d, int which) {
+                Station st = shown.get(which);
+                showStationDetail(act, st);
+            }
+        });
+        b.setNegativeButton("关闭", null);
+        b.show();
+    }
+
+    private static double beaconLat(Activity act) {
+        return BeaconUi.LastFix.has() ? BeaconUi.LastFix.lat() : 0;
+    }
+
+    private static double beaconLon(Activity act) {
+        return BeaconUi.LastFix.has() ? BeaconUi.LastFix.lon() : 0;
+    }
+
+    private static void showStationDetail(Activity act, Station st) {
+        try {
+            AlertDialog.Builder b = new AlertDialog.Builder(act);
+            b.setTitle(st.call);
+            b.setMessage(String.format(Locale.US,
+                    "距离：%.1f km（%s）\n坐标：%.5f, %.5f\n备注：%s\n最后出现：%s",
+                    st.km,
+                    bearing(beaconLat(act), beaconLon(act), st.lat, st.lon),
+                    st.lat, st.lon,
+                    st.comment.length() == 0 ? "-" : st.comment,
+                    new java.text.SimpleDateFormat("MM-dd HH:mm", Locale.US)
+                            .format(new java.util.Date(st.time))));
+            b.setPositiveButton("复制呼号", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface d, int w) {
+                    try {
+                        android.content.ClipboardManager cm = (android.content.ClipboardManager)
+                                act.getSystemService(Context.CLIPBOARD_SERVICE);
+                        if (cm != null) {
+                            cm.setPrimaryClip(android.content.ClipData.newPlainText("call", st.call));
+                        }
+                        toast(act, "已复制 " + st.call);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+            b.setNegativeButton("关闭", null);
+            b.show();
+        } catch (Throwable ignored) {
+        }
+    }
+
     /** 入口：周边台站列表。 */
     public static void run(final Activity act) {
         if (act == null) {
