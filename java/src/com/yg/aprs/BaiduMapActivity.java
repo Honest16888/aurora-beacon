@@ -2,6 +2,9 @@ package com.yg.aprs;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -13,6 +16,8 @@ import android.widget.Toast;
 
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.MarkerOptions;
@@ -37,6 +42,8 @@ public class BaiduMapActivity extends Activity {
 
     private MapView mapView;
     private boolean ready;
+    private BitmapDescriptor myIcon;
+    private BitmapDescriptor otherIcon;
 
     public static void show(Activity from) {
         try {
@@ -75,14 +82,22 @@ public class BaiduMapActivity extends Activity {
             BaiduMap map = mapView.getMap();
             map.setMapType(BaiduMap.MAP_TYPE_NORMAL);
             map.setMyLocationEnabled(true);
+            // MapView 建出来就算成功；marker 失败只影响标记，不应该把整张地图干掉
+            ready = true;
 
-            // 3) WGS-84 → GCJ-02 → BD-09
+            // 百度 SDK 要求 marker 必须带 icon（不设会抛 BDMapSDKException）
+            myIcon = makeDot(0xFF2DD4BF, dp(14));
+            otherIcon = makeDot(0xFFFF8A3D, dp(8));
+
             double[] gcj = BeaconUi.wgs2gcj(la, lo);
             double[] bd = gcj2bd(gcj[0], gcj[1]);
             LatLng ll = new LatLng(bd[0], bd[1]);
-            map.addOverlay(new MarkerOptions().position(ll).title("极光信标"));
+            try {
+                map.addOverlay(new MarkerOptions().position(ll).icon(myIcon).title("极光信标"));
+            } catch (Throwable mt) {
+                NetLog.note("own marker failed: " + mt);
+            }
             map.setMapStatus(MapStatusUpdateFactory.newLatLngZoom(ll, 16.0f));
-            ready = true;
         } catch (Throwable t) {
             err = String.valueOf(t);
             NetLog.note("baidu map init failed: " + err);
@@ -151,6 +166,27 @@ public class BaiduMapActivity extends Activity {
         setContentView(root);
     }
 
+    /** 自己画一个圆点当 marker 图标（百度 SDK 不带默认图标，必须给）。 */
+    private BitmapDescriptor makeDot(int color, int sizePx) {
+        try {
+            int s = Math.max(sizePx, 8);
+            Bitmap bmp = Bitmap.createBitmap(s, s, Bitmap.Config.ARGB_8888);
+            Canvas c = new Canvas(bmp);
+            Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
+            fill.setColor(color);
+            c.drawCircle(s / 2f, s / 2f, s / 2f - Math.max(1f, s / 10f), fill);
+            Paint ring = new Paint(Paint.ANTI_ALIAS_FLAG);
+            ring.setStyle(Paint.Style.STROKE);
+            ring.setStrokeWidth(Math.max(1f, s / 10f));
+            ring.setColor(0xFFFFFFFF);
+            c.drawCircle(s / 2f, s / 2f, s / 2f - Math.max(1f, s / 10f), ring);
+            return BitmapDescriptorFactory.fromBitmap(bmp);
+        } catch (Throwable t) {
+            NetLog.note("makeDot failed: " + t);
+            return null;
+        }
+    }
+
     /** 全国台站：拉 APRS-IS 的中国范围矩形，批量打点到地图上。 */
     private void loadNationwide() {
         if (mapView == null) {
@@ -190,8 +226,12 @@ public class BaiduMapActivity extends Activity {
                 NearbyQuery.Station st = list.get(i);
                 double[] gcj = BeaconUi.wgs2gcj(st.lat, st.lon);
                 double[] bd = gcj2bd(gcj[0], gcj[1]);
+                if (otherIcon == null) {
+                    otherIcon = makeDot(0xFFFF8A3D, dp(8));
+                }
                 opts.add(new MarkerOptions()
                         .position(new LatLng(bd[0], bd[1]))
+                        .icon(otherIcon)
                         .title(st.call));
             }
             map.addOverlays(opts);

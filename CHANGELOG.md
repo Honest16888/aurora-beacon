@@ -9,6 +9,40 @@
 
 ---
 
+## [1.7.2] - 2026-11-26
+
+### 修复
+
+- **百度地图一打开就降级成网页地图**
+
+  真机错误：
+
+  ```
+  java.lang.IllegalStateException: BDMapSDKException:
+  when you add marker, you must set the icon or icons
+  ```
+
+  两个问题叠加：
+
+  1. 百度 SDK **没有默认 marker 图标**，`MarkerOptions` 不带 `icon()` 会直接抛异常
+     （高德有默认图标，所以容易想当然）
+  2. 我把加 marker 的代码放在了初始化的同一个 try 块里，于是 marker 抛异常被当成
+     "SDK 初始化失败"，整张地图被放弃、降级到网页地图 —— 提示文案也因此误导
+
+  修法：
+
+  - 用 `Canvas` 现画圆点当图标：自己 = 青色 14dp、其它台站 = 橙色 8dp，
+    `BitmapDescriptorFactory.fromBitmap(...)`，**两处 marker 都带 icon**
+  - 把 `ready = true` 提前到 `MapView` 建好之后；加 marker 单独 try-catch，
+    **marker 失败只记日志，不再拖垮整张地图**
+
+### 说明
+
+- 若之后再看到"百度地图初始化失败"，那才是真的初始化问题（AK/签名/ABI/隐私），
+  页面上的错误文本和 `net.log` 里的 `baidu map init failed:` 会对得上
+
+---
+
 ## [1.7.1] - 2026-11-26
 
 ### 新增

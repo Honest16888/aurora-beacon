@@ -186,6 +186,22 @@ APRS-IS 拒收；现在启动和发消息前都会自动拆成 base + SSID 写�
 
 查不到台站的常见原因：周边 8 秒内确实没人发；或所用服务器过滤未生效（换 `rotate.aprs2.net` 再试）。
 
+### Q：地图页提示"百度地图初始化失败"怎么办？
+
+1.7.2 之前的版本有个坑：百度 SDK **不给默认 marker 图标**，`MarkerOptions` 少了 `icon()`
+就会抛 `BDMapSDKException: when you add marker, you must set the icon or icons`，
+而旧代码把这条异常归到了"初始化失败"，于是自动降级到网页地图。1.7.2 已修（自己用 Canvas 画圆点当图标，
+且 marker 失败不再影响地图本身）。
+
+如果 1.7.2 之后仍看到这个提示，那就真是初始化问题了，页面上的错误文本能直接定位：
+
+| 错误 | 含义 |
+|---|---|
+| `INVALID_USER_SCODE` / AK 相关 | AK 与「包名 + 签名 SHA1」不匹配（换过签名就会这样） |
+| `UnsatisfiedLinkError: ... libBaiduMapSDK_*` | 设备 ABI 不支持（目前打包了 arm64-v8a 与 armeabi-v7a） |
+| `privacy` 关键字 | 隐私合规未同意（应先 `setAgreePrivacy(true)` 再 `initialize`） |
+| 网络类错误 | 设备连不上百度地图服务 |
+
 ### Q：怎么在地图上看到全国的其他 APRS 设备？
 
 百度地图页点「**全国台站**」：向 APRS-IS 发 `filter b/17.5/73.0/54.5/135.5`
